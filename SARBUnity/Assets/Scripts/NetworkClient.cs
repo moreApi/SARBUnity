@@ -82,9 +82,12 @@ public class NetworkClient : MonoBehaviour {
 
 	public string receiveStuff()
 	{
-		if (networkStream.DataAvailable)
+		if (networkStream != null)
 		{
-			return streamReader.ReadToEnd ();
+			if (networkStream.DataAvailable)
+			{
+				return streamReader.ReadLine ();
+			}
 		}
 		return "";
 	}
