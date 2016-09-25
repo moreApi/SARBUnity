@@ -77,5 +77,6 @@ public class NetworkClient : MonoBehaviour {
 	public void sendStuff()
 	{
 		streamWriter.Write ("I am cool");
+		streamWriter.Flush ();
 	}
 }
