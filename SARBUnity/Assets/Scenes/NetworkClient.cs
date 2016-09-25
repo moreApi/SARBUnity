@@ -79,4 +79,13 @@ public class NetworkClient : MonoBehaviour {
 		streamWriter.Write ("I am cool");
 		streamWriter.Flush ();
 	}
+
+	public string receiveStuff()
+	{
+		if (networkStream.DataAvailable)
+		{
+			return streamReader.ReadToEnd ();
+		}
+		return "";
+	}
 }
