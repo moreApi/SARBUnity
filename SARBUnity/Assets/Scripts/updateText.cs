@@ -15,28 +15,34 @@ public class updateText : MonoBehaviour {
 	// Update is called once per frame
 	void Update () 
 	{
-		if (!runningCoroutine)
+		if (NetworkClient.instance.networkRunning)
 		{
-			//May need its own thread
-			StartCoroutine (getTextFromNetwork ());
-			runningCoroutine = true;
-		}
-		if (runningCoroutine && checkStr != "")
-		{
-			runningCoroutine = false;
-			checkStr = "";
+			if (NetworkClient.instance.networkStream.DataAvailable)
+			{
+				if (!runningCoroutine)
+				{
+					Debug.Log ("Running update");
+					//May need its own thread
+					getTextFromNetwork ();
+					runningCoroutine = true;
+				}
+				if (runningCoroutine && checkStr != "")
+				{
+					Debug.Log (" Running second update");
+					runningCoroutine = false;
+					checkStr = "";
+				}
+			}
 		}
 	}
 
-	IEnumerator getTextFromNetwork()
+	void getTextFromNetwork()
 	{
 		string tempStr = NetworkClient.instance.receiveStuff ();
-		yield return null;
 		if (tempStr != "")
 		{
 			gameObject.transform.GetComponent<Text> ().text = tempStr;
 			checkStr = tempStr;
 		}
-		yield return null;
 	}
 }

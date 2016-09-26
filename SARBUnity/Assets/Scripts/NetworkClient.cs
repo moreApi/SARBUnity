@@ -6,11 +6,12 @@ using System.Net.Sockets;
 public class NetworkClient : MonoBehaviour {
 	public static NetworkClient instance = null;
 	TcpClient clientSocket;
-	NetworkStream networkStream;
+	public NetworkStream networkStream;
 	StreamWriter streamWriter;
 	StreamReader streamReader;
 
-	bool receiving = true;
+	public bool networkRunning = false;
+	bool receiving = false;
 	string hostname = "";
 	int port = 0;
 
@@ -45,6 +46,8 @@ public class NetworkClient : MonoBehaviour {
 			networkStream = clientSocket.GetStream();
 			streamWriter = new StreamWriter(networkStream);
 			streamReader = new StreamReader(networkStream);
+			networkRunning = true;
+			Debug.Log("Connected to: " + hostname + " Port: " + port);
 		}
 		catch(Exception e) 
 		{
@@ -76,15 +79,22 @@ public class NetworkClient : MonoBehaviour {
 	public string receiveStuff()
 	{
 		string tempString = "";
+		char[] tempChar = new char[256];
+		int index = 0;
+		int count = 256;
 		if (networkStream != null)
 		{
+			Debug.Log ("0");
 			if (networkStream.DataAvailable)
 			{
+				Debug.Log ("1");
 				if (receiving == false)
 				{
+					Debug.Log ("receiving ... ");
 					receiving = true;
+					//tempString = streamReader.ReadToEnd ();
 					tempString = streamReader.ReadLine ();
-
+					//Debug.Log (tempString);
 				}
 			}
 			if (receiving == true && !networkStream.DataAvailable)
