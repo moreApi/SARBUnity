@@ -87,10 +87,10 @@ public class NetworkClient : MonoBehaviour {
 
 				}
 			}
-		}
-		if (receiving == true && !networkStream.DataAvailable)
-		{
-			receiving = false;
+			if (receiving == true && !networkStream.DataAvailable)
+			{
+				receiving = false;
+			}
 		}
 		return tempString;
 	}
