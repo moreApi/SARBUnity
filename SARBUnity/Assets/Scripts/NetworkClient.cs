@@ -9,8 +9,10 @@ public class NetworkClient : MonoBehaviour {
 	NetworkStream networkStream;
 	StreamWriter streamWriter;
 	StreamReader streamReader;
-	public string hostname = "";
-	public int port = 0;
+
+	bool receiving = true;
+	string hostname = "";
+	int port = 0;
 
 	void Awake()
 	{
@@ -23,15 +25,6 @@ public class NetworkClient : MonoBehaviour {
 			Destroy(gameObject);
 		}
 		DontDestroyOnLoad(gameObject);
-	}
-
-	// Use this for initialization
-	void Start () {
-	}
-	
-	// Update is called once per frame
-	void Update () {
-	
 	}
 
 	public void updateHostName(string hostname)
@@ -59,11 +52,11 @@ public class NetworkClient : MonoBehaviour {
 		}
 	}
 
-	public void initTcpClient(string host, int port)
+	public void initTcpClient(string hostname, int port)
 	{
 		try
 		{
-			clientSocket = new TcpClient (host, port);
+			clientSocket = new TcpClient (hostname, port);
 			networkStream = clientSocket.GetStream();
 			streamWriter = new StreamWriter(networkStream);
 			streamReader = new StreamReader(networkStream);
@@ -82,13 +75,23 @@ public class NetworkClient : MonoBehaviour {
 
 	public string receiveStuff()
 	{
+		string tempString = "";
 		if (networkStream != null)
 		{
 			if (networkStream.DataAvailable)
 			{
-				return streamReader.ReadLine ();
+				if (receiving == false)
+				{
+					receiving = true;
+					tempString = streamReader.ReadLine ();
+
+				}
 			}
 		}
-		return "";
+		if (receiving == true && !networkStream.DataAvailable)
+		{
+			receiving = false;
+		}
+		return tempString;
 	}
 }
