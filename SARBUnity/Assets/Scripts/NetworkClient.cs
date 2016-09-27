@@ -9,7 +9,7 @@ public class NetworkClient : MonoBehaviour {
 	public NetworkStream networkStream;
 	StreamWriter streamWriter;
 	StreamReader streamReader;
-
+	[HideInInspector]
 	public bool networkRunning = false;
 	bool receiving = false;
 	string hostname = "";
@@ -61,6 +61,7 @@ public class NetworkClient : MonoBehaviour {
 		{
 			clientSocket = new TcpClient (hostname, port);
 			networkStream = clientSocket.GetStream();
+			networkStream.ReadTimeout = 1;
 			streamWriter = new StreamWriter(networkStream);
 			streamReader = new StreamReader(networkStream);
 		}
@@ -93,7 +94,14 @@ public class NetworkClient : MonoBehaviour {
 					Debug.Log ("receiving ... ");
 					receiving = true;
 					//tempString = streamReader.ReadToEnd ();
+					try
+					{
 					tempString = streamReader.ReadLine ();
+					}
+					catch(Exception e)
+					{
+						Debug.Log ("Receive error: " + e);
+					}
 					//Debug.Log (tempString);
 				}
 			}
