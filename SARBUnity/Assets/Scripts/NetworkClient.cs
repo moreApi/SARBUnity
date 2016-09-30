@@ -7,17 +7,16 @@ public class NetworkClient : MonoBehaviour
 {
 
     // String and Host name
-    public String hostname;
-    public Int32 port;
+    public String hostname;                     // Ip of the host:      Local or Public ip depends.
+    public Int32 port;                          // Port of the host 
 
-    internal Boolean socket_ready = false;
-    internal String input_buffer = "";
+    internal Boolean socketReady = false;
+    internal String inputBuffer = "";
 
-    TcpClient tcp_socket;
-    NetworkStream net_stream;
+    TcpClient tcpSocket;
+    NetworkStream netStream;
+
     public static NetworkClient instance = null;
-
-
     StreamWriter streamWriter;
     StreamReader streamReader;
 
@@ -40,30 +39,30 @@ public class NetworkClient : MonoBehaviour
 
 
 
-    public void updateHostName(string hostname)
+    public void UpdateHostName(string hostname)
     {
         this.hostname = hostname;
     }
 
 
 
-    public void updatePort(Int32 port)
+    public void UpdatePort(Int32 port)
     {
         this.port = port;
     }
 
 
 
-    public void initTcpClient()
+    public void InitTcpClient()
     {
         try
         {
             Debug.Log(this.hostname + " " + this.port);
-            this.tcp_socket = new TcpClient(this.hostname, this.port);
-            this.net_stream = this.tcp_socket.GetStream();
-            this.streamWriter = new StreamWriter(this.net_stream);
-            this.streamReader = new StreamReader(this.net_stream);
-            this.socket_ready = true;
+            this.tcpSocket = new TcpClient(this.hostname, this.port);
+            this.netStream = this.tcpSocket.GetStream();
+            this.streamWriter = new StreamWriter(this.netStream);
+            this.streamReader = new StreamReader(this.netStream);
+            this.socketReady = true;
             Debug.Log("Connected to: " + this.hostname + " Port: " + this.port);
         }
 
@@ -76,7 +75,7 @@ public class NetworkClient : MonoBehaviour
 
     public void WriteSocket(string line)
     {
-        if (!this.socket_ready)
+        if (!this.socketReady)
             return;
 
         // Consider a string builder for better performance here
@@ -88,10 +87,10 @@ public class NetworkClient : MonoBehaviour
 
     public string ReceiveSocket()
     {
-        if (!this.socket_ready)
+        if (!this.socketReady)
             return "";
 
-        if (this.net_stream.DataAvailable)
+        if (this.netStream.DataAvailable)
             return this.streamReader.ReadLine();
 
         return "";
@@ -99,15 +98,15 @@ public class NetworkClient : MonoBehaviour
 
 
     // Close the sockets and readers
+    
     public void closeSocket()
     {
-        if (!this.socket_ready)
+        if (!this.socketReady)
             return;
 
         this.streamWriter.Close();
         this.streamReader.Close();
-        this.tcp_socket.Close();
-        this.socket_ready = false;
-
+        this.tcpSocket.Close();
+        this.socketReady = false;
     }
 }
