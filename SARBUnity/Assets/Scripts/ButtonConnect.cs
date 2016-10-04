@@ -5,6 +5,6 @@ public class ButtonConnect : MonoBehaviour {
 
 	public void onClick()
 	{
-		NetworkClient.instance.InitTcpClient ();
+		NetworkClient.instance.initTcpClient ();
 	}
 }

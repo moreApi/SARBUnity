@@ -39,21 +39,21 @@ public class NetworkClient : MonoBehaviour
 
 
 
-    public void UpdateHostName(string hostname)
+    public void updateHostName(string hostname)
     {
         this.hostname = hostname;
     }
 
 
 
-    public void UpdatePort(Int32 port)
+    public void updatePort(Int32 port)
     {
         this.port = port;
     }
 
 
 
-    public void InitTcpClient()
+    public void initTcpClient()
     {
         try
         {
@@ -73,7 +73,7 @@ public class NetworkClient : MonoBehaviour
         }
     }
 
-    public void WriteSocket(string line)
+    public void writeSocket(string line)
     {
         if (!this.socketReady)
             return;
@@ -85,7 +85,7 @@ public class NetworkClient : MonoBehaviour
         
     }
 
-    public string ReceiveSocket()
+    public string receiveSocket()
     {
         if (!this.socketReady)
             return "";
