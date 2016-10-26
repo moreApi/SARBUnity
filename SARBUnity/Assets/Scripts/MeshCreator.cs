@@ -1,24 +1,79 @@
 ﻿using UnityEngine;
+using System;
 using System.Collections;
+using System.Collections.Generic;
 
-[RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
 public class MeshCreator : MonoBehaviour {
 
 	public int xSize;
 	public int ySize;
 
+	List<GameObject> gO;
 	private Mesh mesh;
 	private Vector3[] vertices;
 
 
 	void Awake ()
 	{
-		Generate ();
+		gO = new List<GameObject>();
+		Vector3 pos = new Vector3 (0, 0, 0);
+		for (int i = 0; i < 10; i++)
+		{
+			gO.Add(Generate ());
+			gO [i].transform.position = pos;
+			pos.y += 47;
+		}
+		Debug.Log(gO [0].transform);
 	}
 
-	private void Generate()
+	void Update()
 	{
-		GetComponent<MeshFilter> ().mesh = mesh = new Mesh ();
+		int sizeOfMesh = 640 * 48;
+		List<string[]> myStrings = this.GetComponent<StringParser> ().myStrings;
+		//Debug.Log (myStrings.Count);
+		//Debug.Log (myStrings[0].Length);
+		Vector3[] positions = gO [0].GetComponent<MeshFilter> ().mesh.vertices;
+		Debug.Log(gO [0].GetComponent<MeshFilter> ().mesh.vertices.Length);
+		int meshCounter = 0;
+		for (int j = 0; j < 640; j++)
+		{
+			for (int i = 0; i < 480; i++)
+			{
+				positions [((i + 1) * j) % 30720].z = -float.Parse(myStrings [j][i]) / 100.0f;
+
+				if (((i + 1) * j) % 30720 == 0 && i != 0 && j != 0)
+				{
+					if (meshCounter < 10)
+					{
+						gO [meshCounter].GetComponent<MeshFilter> ().mesh.vertices = positions;
+					}
+					meshCounter++;
+					if (meshCounter < 10)
+					{
+						positions = gO [meshCounter].GetComponent<MeshFilter> ().mesh.vertices;
+					}
+				}
+			}
+		}
+		for (int i = 0; i < positions.Length; i++)
+		{
+			//Debug.Log(float.Parse(myStrings [0][i]) / 100f);
+		}
+		if (meshCounter < 10)
+		{
+			gO [meshCounter].GetComponent<MeshFilter> ().mesh.vertices = positions;
+		}
+	}
+
+	private GameObject Generate()
+	{
+		GameObject gameObj = new GameObject ();
+		//Mesh newMesh = gameObj.AddComponent<Mesh> () as Mesh;
+		//MeshFilter newMeshFilter = gameObj.AddComponent<MeshFilter> () as MeshFilter;
+		mesh = new Mesh ();
+		gameObj.AddComponent<MeshFilter>().mesh = mesh;
+		gameObj.AddComponent<MeshRenderer> ();
+		//gameObj.GetComponent<MeshFilter> ().mesh = 
 		mesh.name = "Grid";
 		vertices = new Vector3[(xSize + 1) * (ySize + 1)];
 		Vector2[] uv = new Vector2[vertices.Length];
@@ -42,5 +97,8 @@ public class MeshCreator : MonoBehaviour {
 		}
 		mesh.triangles = triangles;
 		mesh.RecalculateNormals();
+		gameObj.GetComponent<MeshRenderer>().material = this.GetComponent<MeshRenderer>().material;
+		gameObj.transform.SetParent (this.transform);
+		return gameObj;
 	}
 }

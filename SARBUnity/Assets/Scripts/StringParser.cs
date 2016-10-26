@@ -6,13 +6,13 @@ using System.Text.RegularExpressions;
 public class StringParser : MonoBehaviour {
 
 	string toParse;
-
+	public List<string[]> myStrings;
 	// Use this for initialization
 	void Start () {
 
 		TextAsset bindata= Resources.Load("heightmapData") as TextAsset;
 		toParse = bindata.text;
-		parse ();
+		myStrings = parse ();
 	}
 	
 	// Update is called once per frame
@@ -20,7 +20,7 @@ public class StringParser : MonoBehaviour {
 	
 	}
 
-	void parse()
+	List<string[]> parse()
 	{
 		/*List<string> parsed = new List<string> ();
 		int position = 0;
@@ -33,7 +33,7 @@ public class StringParser : MonoBehaviour {
 				start = position + 1;
 			}
 		} while (position > 0);*/
-		Regex regex = new Regex (@"\n");
+		/*Regex regex = new Regex (@"\n");
 		string[] parsed = regex.Split (toParse);
 		regex = new Regex (@" ");
 		List<string[]> moreParsed = new List<string[]> ();
@@ -42,14 +42,8 @@ public class StringParser : MonoBehaviour {
 			string[] parsedx = regex.Split (parsed [i]);
 			moreParsed.Add (parsedx);
 		}
-		for (int i = 0; i < moreParsed [0].Length; i++)
-		{
-			Debug.Log ("1: " + moreParsed [0] [i]);
-		}
-		for (int i = 0; i < moreParsed [moreParsed.Count - 1].Length; i++)
-		{
-			Debug.Log ("2: " + moreParsed [moreParsed.Count - 1] [i]);
-		}
+		*/
+
 		string[] test = toParse.Split ('\n');
 		Debug.Log ("test size: " + test.Length);
 		List<string[]> test2List = new List<string[]> ();
@@ -57,8 +51,24 @@ public class StringParser : MonoBehaviour {
 		{
 			test2List.Add(test [i].Split (' '));
 		}
-		Debug.Log ("test2 first size: " + test2List[0].Length);
-		Debug.Log ("test2 last size: " + test2List[test2List.Count-1].Length);
 
+		/*int tempint = test2List [0].Length;
+		string[] array = new string[480];
+
+		List<string[]> newstrings = new List<string[]> ();
+		for (int i = 0; i < test2List.Count-1; i++)
+		{
+			for (int j = 0; j < array.Length; j++)
+			{
+				array [j] = test2List [i] [j];
+			}
+			newstrings.Add (array);
+		}
+		for (int i = newstrings.Count; i < 640; i++)
+		{
+			newstrings.Add (array);
+		}*/
+
+		return test2List;
 	}
 }
