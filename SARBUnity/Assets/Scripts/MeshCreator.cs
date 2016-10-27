@@ -8,6 +8,8 @@ public class MeshCreator : MonoBehaviour {
 	public int xSize;
 	public int ySize;
 
+	int tempcounter = 0;
+
 	List<GameObject> gO;
 	private Mesh mesh;
 	private Vector3[] vertices;
@@ -35,23 +37,23 @@ public class MeshCreator : MonoBehaviour {
 		Vector3[] positions = gO [0].GetComponent<MeshFilter> ().mesh.vertices;
 		Debug.Log(gO [0].GetComponent<MeshFilter> ().mesh.vertices.Length);
 		int meshCounter = 0;
+		int posCounter = 0;
+		int posCounterPro = 0;
+
 		for (int j = 0; j < 640; j++)
 		{
 			for (int i = 0; i < 480; i++)
 			{
-				positions [((i + 1) * j) % 30720].z = -float.Parse(myStrings [j][i]) / 100.0f;
+				posCounter = (i + (j * 480)) % 30720;
+				//posCounterPro = (i + 1) + (j + 1) % 30720;
+				positions [posCounter].z = float.Parse(myStrings [j][i]) / 10.0f;
 
-				if (((i + 1) * j) % 30720 == 0 && i != 0 && j != 0)
+				if (posCounter == 0 && j != 0)
 				{
-					if (meshCounter < 10)
-					{
-						gO [meshCounter].GetComponent<MeshFilter> ().mesh.vertices = positions;
-					}
+					gO [meshCounter].GetComponent<MeshFilter> ().mesh.vertices = positions;
+					gO [meshCounter].GetComponent<MeshFilter> ().mesh.RecalculateNormals();
 					meshCounter++;
-					if (meshCounter < 10)
-					{
-						positions = gO [meshCounter].GetComponent<MeshFilter> ().mesh.vertices;
-					}
+					positions = gO [meshCounter].GetComponent<MeshFilter> ().mesh.vertices;
 				}
 			}
 		}
