@@ -79,7 +79,20 @@ public class NetworkClient : MonoBehaviour
             return;
 
         // Consider a string builder for better performance here
-        line = line + "\r\n";
+        string datasize = "0000000";
+        char[] tempArray = datasize.ToCharArray();
+        string sizeOfMessage = line.Length.ToString();
+        int offset = sizeOfMessage.Length-1;
+        for(int i = datasize.Length-1; i > ((datasize.Length-1) - sizeOfMessage.Length); i--)
+        {
+            tempArray[i] = sizeOfMessage.ToCharArray()[offset];
+            offset--;
+        }
+
+       
+        datasize = new string(tempArray);
+        //+line = datasize + line;
+        this.streamWriter.Write(datasize);        
         this.streamWriter.Write(line);
         this.streamWriter.Flush();
         
