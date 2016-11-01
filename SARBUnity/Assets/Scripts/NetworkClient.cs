@@ -125,40 +125,62 @@ public string receiveSocket()
                 array[i] = Convert.ToChar(header[i]);
             }
 
-            Debug.Log(size);
             string tempSize = "";
             
             
             // get the size:
             for (int i = 0; i < size; i++)
             {
-                 if(array[i] != '0')
-                {
-                    tempSize = tempSize + array[i].ToString();
-                }
+               tempSize = tempSize + array[i].ToString();
             }
-           
+
+            int packageSize = Convert.ToInt32(tempSize);
+
 
             // read the package
-            int packageSize = Convert.ToInt32(tempSize);
-            Byte[] dataBuffer = new Byte[packageSize];
-
             if(packageSize > 0)
             {
-                if(!readData(dataBuffer))
+                int storageSize = 2048;
+                Byte[] storageBuffer = new Byte[storageSize];
+                do
                 {
-                    return message;
+                    int readSize = 0;
+                    if (storageSize < packageSize)
+                    {
+                        readSize = storageBuffer.Length;
+                    }
+
+                    else
+                    {
+                        readSize = packageSize;
+                    }
+
+                    storageBuffer = readData(readSize);
+
+                     for (int i = 0; i < storageBuffer.Length; i++)
+                    {
+                          message = message + "" + (Convert.ToChar(storageBuffer[i]).ToString());
+                    }
+                    Debug.Log("MESSAGE " + message);
+                    message = "";
+                    packageSize -= readSize;
+
+
                 }
+                while (packageSize>0);
+                
             }
 
-            for (int i = 0; i < dataBuffer.Length; i++)
-            {
-                message = message + "" + (Convert.ToChar(dataBuffer[i]).ToString());
-            }
+            //for (int i = 0; i < dataBuffer.Length; i++)
+            //{
+            //    message = message + "" + (Convert.ToChar(dataBuffer[i]).ToString());
+            //}
+           // Debug.Log("MESSAGE " + message);
+
             return message;
         }
-
-        return message;
+        String noMessage = "";
+        return noMessage;
 }
 
 
@@ -175,12 +197,16 @@ public string receiveSocket()
         this.socketReady = false;
     }
 
-    private bool readData(Byte[] buffer)
+    private Byte[] readData(int size)
     {
-        int packageSize= buffer.Length;
-
-        netStream.Read(buffer, 0, buffer.Length);
-        return true;
+        Byte[] buffer = new Byte[size];
+        while (size>0)
+        {
+           int bytes = netStream.Read(buffer, 0, size);
+           size -= bytes;
+        }
+        
+        return buffer;
     }
 
 
