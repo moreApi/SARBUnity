@@ -3,6 +3,8 @@ using System.Collections;
 using System;
 using System.IO;
 using System.Net.Sockets;
+using System.Text;
+
 public class NetworkClient : MonoBehaviour
 {
 
@@ -91,23 +93,73 @@ public class NetworkClient : MonoBehaviour
 
        
         datasize = new string(tempArray);
-        //+line = datasize + line;
-        this.streamWriter.Write(datasize);        
-        this.streamWriter.Write(line);
-        this.streamWriter.Flush();
-        
+
+        // Send the header
+        ASCIIEncoding asen = new ASCIIEncoding();
+        Byte[] Buffer = asen.GetBytes(datasize);
+        netStream.Write(Buffer, 0, Buffer.Length);
+
+        // send the data
+        Buffer = asen.GetBytes(line);
+        netStream.Write(Buffer, 0, Buffer.Length);
+
+
     }
 
-    public string receiveSocket()
-    {
+public string receiveSocket()
+{
+        string message = "";
         if (!this.socketReady)
-            return "";
+            return message;
 
-        if (this.netStream.DataAvailable)
-            return this.streamReader.ReadLine();
+        // Read data
+        if (netStream.DataAvailable)
+        {
+            // Read header
+            byte[] header = new byte[7];
+            int size = netStream.Read(header, 0, 7);
+            char[] array = new char[size];
 
-        return "";
-    }
+            for (int i = 0; i < size; i++)
+            {
+                array[i] = Convert.ToChar(header[i]);
+            }
+
+            Debug.Log(size);
+            string tempSize = "";
+            
+            
+            // get the size:
+            for (int i = 0; i < size; i++)
+            {
+                 if(array[i] != '0')
+                {
+                    tempSize = tempSize + array[i].ToString();
+                }
+            }
+           
+
+            // read the package
+            int packageSize = Convert.ToInt32(tempSize);
+            Byte[] dataBuffer = new Byte[packageSize];
+
+            if(packageSize > 0)
+            {
+                if(!readData(dataBuffer))
+                {
+                    return message;
+                }
+            }
+
+            for (int i = 0; i < dataBuffer.Length; i++)
+            {
+                message = message + "" + (Convert.ToChar(dataBuffer[i]).ToString());
+            }
+            return message;
+        }
+
+        return message;
+}
 
 
     // Close the sockets and readers
@@ -122,4 +174,14 @@ public class NetworkClient : MonoBehaviour
         this.tcpSocket.Close();
         this.socketReady = false;
     }
+
+    private bool readData(Byte[] buffer)
+    {
+        int packageSize= buffer.Length;
+
+        netStream.Read(buffer, 0, buffer.Length);
+        return true;
+    }
+
+
 }
