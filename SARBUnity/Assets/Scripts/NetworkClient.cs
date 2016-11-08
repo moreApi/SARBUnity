@@ -84,7 +84,7 @@ public class NetworkClient : MonoBehaviour
         string datasize = "000000000|0000";
         char[] tempArray = datasize.ToCharArray();
         string sizeOfMessage = line.Length.ToString();
-        string sizeOfCommand = "2";
+        string sizeOfCommand = "1";
 
         int offset = sizeOfCommand.Length - 1;
         for (int i = datasize.Length - 1; i > ((datasize.Length - 1) - sizeOfCommand.Length); i--)
@@ -125,75 +125,21 @@ public string receiveSocket()
         // Read data
         if (netStream.DataAvailable)
         {
-            // Read header
-            byte[] header = new byte[14];
-            int size = netStream.Read(header, 0, 14);
-            char[] array = new char[size];
 
-            for (int i = 0; i < size; i++)
+          // Read the Header
+           int packageSize = 0;
+           int packageCommand = 0;
+           readHeader(ref packageSize, ref packageCommand);
+
+            if(packageCommand == 1)
             {
-                array[i] = Convert.ToChar(header[i]);
+              message =  readEcho(packageSize);
             }
 
-            string tempSize = "";
-            string tempCommand = "";
-            int lengthOfSize = 9;
-            int lengthOfCommand = 14;
-            
-            
-            // get the size:
-            for (int i = 0; i < lengthOfSize; i++)
+            // read the heightmap
+            if (packageCommand == 2)
             {
-               tempSize = tempSize + array[i].ToString();
-            }
-
-            
-            for (int i = lengthOfSize + 1; i < (lengthOfCommand); i++)
-            {
-                tempCommand = tempCommand + array[i].ToString();
-            }
-
-            Debug.Log(tempSize);
-            Debug.Log(tempCommand);
-            int packageSize = Convert.ToInt32(tempSize);
-            int packageCommand = Convert.ToInt32(tempCommand);
-
-            Debug.Log("PackageSize: " + packageSize + "      " + "PackageCommand: " + packageCommand);
-
-            // read the package
-            if(packageSize > 0)
-            {
-                int storageSize = 2048;
-                Byte[] storageBuffer = new Byte[storageSize];
-
-                // Reading heightmap
-                do
-                {
-                    int readSize = 0;
-                    if (storageSize < packageSize)
-                    {
-                        readSize = storageBuffer.Length;
-                    }
-
-                    else
-                    {
-                        readSize = packageSize;
-                    }
-
-                    storageBuffer = readData(readSize);
-
-                     for (int i = 0; i < storageBuffer.Length; i++)
-                    {
-                          message = message + "" + (Convert.ToChar(storageBuffer[i]).ToString());
-                    }
-                    Debug.Log("MESSAGE " + message);
-                    message = "";
-                    packageSize -= readSize;
-
-
-                }
-                while (packageSize>0);
-                
+                readHeightMap(packageSize);
             }
 
             //for (int i = 0; i < dataBuffer.Length; i++)
@@ -234,5 +180,119 @@ public string receiveSocket()
         return buffer;
     }
 
+    private void readHeader(ref int packageSize,  ref int packageCommand)
+    {
+
+        // Read header
+        byte[] header = new byte[14];
+        int size = netStream.Read(header, 0, 14);
+
+
+        char[] array = new char[size];
+        for (int i = 0; i < size; i++)
+        {
+            array[i] = Convert.ToChar(header[i]);
+        }
+
+
+        packageSize = Convert.ToInt32(parseheader(array, 0, 9));
+        packageCommand = Convert.ToInt32(parseheader(array, 10, 14));
+
+        Debug.Log("PackageSize: " + packageSize + "      " + "PackageCommand: " + packageCommand);
+
+    }
+
+
+    private string parseheader(char[] array, int start, int end)
+    {
+        string temp = "";
+
+       
+        for (int i = start; i < end; i++)
+        {
+            temp = temp + array[i].ToString();
+        }
+
+        return temp;
+    }
+
+    private void readHeightMap(int packageSize)
+    {
+        string message = "";
+
+        if (packageSize > 0)
+        {
+            int storageSize = 2048;
+            Byte[] storageBuffer = new Byte[storageSize];
+
+            // Reading heightmap
+            do
+            {
+                int readSize = 0;
+                if (storageSize < packageSize)
+                {
+                    readSize = storageBuffer.Length;
+                }
+
+                else
+                {
+                    readSize = packageSize;
+                }
+
+                storageBuffer = readData(readSize);
+
+                for (int i = 0; i < storageBuffer.Length; i++)
+                {
+                    message = message + "" + (Convert.ToChar(storageBuffer[i]).ToString());
+                }
+                Debug.Log("MESSAGE " + message);
+                message = "";
+                packageSize -= readSize;
+
+
+            }
+            while (packageSize > 0);
+        }
+    }
+
+
+
+    private string readEcho(int packageSize)
+    {
+        string echo = "";
+        if (packageSize > 0)
+        {
+            int storageSize = 2048;
+            Byte[] storageBuffer = new Byte[storageSize];
+
+            // Reading heightmap
+            do
+            {
+                int readSize = 0;
+                if (storageSize < packageSize)
+                {
+                    readSize = storageBuffer.Length;
+                }
+
+                else
+                {
+                    readSize = packageSize;
+                }
+
+                storageBuffer = readData(readSize);
+
+                for (int i = 0; i < storageBuffer.Length; i++)
+                {
+                    echo = echo + "" + (Convert.ToChar(storageBuffer[i]).ToString());
+                }
+                packageSize -= readSize;
+
+
+            }
+            while (packageSize > 0);
+        }
+
+        return echo;
+    }
 
 }
