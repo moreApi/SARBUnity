@@ -4,6 +4,8 @@ using System;
 using System.IO;
 using System.Net.Sockets;
 using System.Text;
+using System.Collections.Generic;
+using System.Linq;
 
 public class NetworkClient : MonoBehaviour
 {
@@ -21,6 +23,7 @@ public class NetworkClient : MonoBehaviour
     public static NetworkClient instance = null;
     StreamWriter streamWriter;
     StreamReader streamReader;
+
 
 
 
@@ -75,44 +78,34 @@ public class NetworkClient : MonoBehaviour
         }
     }
 
-    public void writeSocket(string line)
+    public void writeSocket(string line, int command)
     {
         if (!this.socketReady)
             return;
 
         // Consider a string builder for better performance here
-        string datasize = "000000000|0000";
-        char[] tempArray = datasize.ToCharArray();
-        string sizeOfMessage = line.Length.ToString();
-        string sizeOfCommand = "1";
-
-        int offset = sizeOfCommand.Length - 1;
-        for (int i = datasize.Length - 1; i > ((datasize.Length - 1) - sizeOfCommand.Length); i--)
+        if (command == 1)
         {
-            tempArray[i] = sizeOfCommand.ToCharArray()[offset];
-            offset--;
-        }
+            // Send the header
+            ASCIIEncoding asen = new ASCIIEncoding();
+            Byte[] Buffer = asen.GetBytes(sendHeader(line.Length, command));
+            netStream.Write(Buffer, 0, Buffer.Length);
 
-        offset = sizeOfMessage.Length - 1;
-        for (int i = datasize.Length-6; i > ((datasize.Length-6) - sizeOfMessage.Length); i--)
+            // send the data
+            Buffer = asen.GetBytes(line);
+            netStream.Write(Buffer, 0, Buffer.Length);
+        }
+        if(command == 2)
         {
-            tempArray[i] = sizeOfMessage.ToCharArray()[offset];
-            offset--;
+            // Send the header
+            ASCIIEncoding asen = new ASCIIEncoding();
+            Byte[] Buffer = asen.GetBytes("000000000|0002");
+            netStream.Write(Buffer, 0, Buffer.Length);
+
+            // send the data
+            Buffer = asen.GetBytes(line);
+            netStream.Write(Buffer, 0, Buffer.Length);
         }
-
-       
-        datasize = new string(tempArray);
-
-
-        // Send the header
-        ASCIIEncoding asen = new ASCIIEncoding();
-        Byte[] Buffer = asen.GetBytes(datasize);
-        netStream.Write(Buffer, 0, Buffer.Length);
-
-        // send the data
-        Buffer = asen.GetBytes(line);
-        netStream.Write(Buffer, 0, Buffer.Length);
-
 
     }
 
@@ -141,12 +134,6 @@ public string receiveSocket()
             {
                 readHeightMap(packageSize);
             }
-
-            //for (int i = 0; i < dataBuffer.Length; i++)
-            //{
-            //    message = message + "" + (Convert.ToChar(dataBuffer[i]).ToString());
-            //}
-           // Debug.Log("MESSAGE " + message);
 
             return message;
         }
@@ -216,8 +203,9 @@ public string receiveSocket()
         return temp;
     }
 
-    private void readHeightMap(int packageSize)
+    private List<string> readHeightMap(int packageSize)
     {
+        List<string> storeHeightMap = new List<string>();
         string message = "";
 
         if (packageSize > 0)
@@ -245,14 +233,23 @@ public string receiveSocket()
                 {
                     message = message + "" + (Convert.ToChar(storageBuffer[i]).ToString());
                 }
-                Debug.Log("MESSAGE " + message);
+                
+                storeHeightMap.Add(message);
+
                 message = "";
                 packageSize -= readSize;
 
-
             }
+
             while (packageSize > 0);
         }
+
+        for(int i=0; i < storeHeightMap.Count(); i++)
+        {
+            Debug.Log(storeHeightMap[i]);
+        }
+
+        return storeHeightMap;
     }
 
 
@@ -294,5 +291,34 @@ public string receiveSocket()
 
         return echo;
     }
+
+    private string sendHeader(int size, int command)
+    {
+        string header = "000000000|0000";
+        char[] tempArray =header.ToCharArray();
+        string sizeOfPackage = size.ToString();
+        string commandInString = command.ToString();
+
+
+        int offset = commandInString.Length - 1;
+        for (int i = header.Length - 1; i > ((header.Length - 1) - commandInString.Length); i--)
+        {
+            tempArray[i] = commandInString.ToCharArray()[offset];
+            offset--;
+        }
+
+        offset = sizeOfPackage.Length - 1;
+        for (int i = header.Length - 6; i > ((header.Length - 6) - sizeOfPackage.Length); i--)
+        {
+            tempArray[i] = sizeOfPackage.ToCharArray()[offset];
+            offset--;
+        }
+
+
+        header = new string(tempArray);
+
+        return header;
+    }
+
 
 }
