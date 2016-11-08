@@ -81,11 +81,20 @@ public class NetworkClient : MonoBehaviour
             return;
 
         // Consider a string builder for better performance here
-        string datasize = "0000000";
+        string datasize = "000000000|0000";
         char[] tempArray = datasize.ToCharArray();
         string sizeOfMessage = line.Length.ToString();
-        int offset = sizeOfMessage.Length-1;
-        for(int i = datasize.Length-1; i > ((datasize.Length-1) - sizeOfMessage.Length); i--)
+        string sizeOfCommand = "2";
+
+        int offset = sizeOfCommand.Length - 1;
+        for (int i = datasize.Length - 1; i > ((datasize.Length - 1) - sizeOfCommand.Length); i--)
+        {
+            tempArray[i] = sizeOfCommand.ToCharArray()[offset];
+            offset--;
+        }
+
+        offset = sizeOfMessage.Length - 1;
+        for (int i = datasize.Length-6; i > ((datasize.Length-6) - sizeOfMessage.Length); i--)
         {
             tempArray[i] = sizeOfMessage.ToCharArray()[offset];
             offset--;
@@ -93,6 +102,7 @@ public class NetworkClient : MonoBehaviour
 
        
         datasize = new string(tempArray);
+
 
         // Send the header
         ASCIIEncoding asen = new ASCIIEncoding();
@@ -116,8 +126,8 @@ public string receiveSocket()
         if (netStream.DataAvailable)
         {
             // Read header
-            byte[] header = new byte[7];
-            int size = netStream.Read(header, 0, 7);
+            byte[] header = new byte[14];
+            int size = netStream.Read(header, 0, 14);
             char[] array = new char[size];
 
             for (int i = 0; i < size; i++)
@@ -126,22 +136,37 @@ public string receiveSocket()
             }
 
             string tempSize = "";
+            string tempCommand = "";
+            int lengthOfSize = 9;
+            int lengthOfCommand = 14;
             
             
             // get the size:
-            for (int i = 0; i < size; i++)
+            for (int i = 0; i < lengthOfSize; i++)
             {
                tempSize = tempSize + array[i].ToString();
             }
 
-            int packageSize = Convert.ToInt32(tempSize);
+            
+            for (int i = lengthOfSize + 1; i < (lengthOfCommand); i++)
+            {
+                tempCommand = tempCommand + array[i].ToString();
+            }
 
+            Debug.Log(tempSize);
+            Debug.Log(tempCommand);
+            int packageSize = Convert.ToInt32(tempSize);
+            int packageCommand = Convert.ToInt32(tempCommand);
+
+            Debug.Log("PackageSize: " + packageSize + "      " + "PackageCommand: " + packageCommand);
 
             // read the package
             if(packageSize > 0)
             {
                 int storageSize = 2048;
                 Byte[] storageBuffer = new Byte[storageSize];
+
+                // Reading heightmap
                 do
                 {
                     int readSize = 0;

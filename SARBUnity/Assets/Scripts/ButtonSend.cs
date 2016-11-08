@@ -8,7 +8,7 @@ public class ButtonSend : MonoBehaviour {
 	{
         // Create some diversity in sending
         int rnd = Random.Range(1, 5);
-		NetworkClient.instance.writeSocket("file");
+		NetworkClient.instance.writeSocket("");
 	}
 
     private string ChooseString(int choice)
