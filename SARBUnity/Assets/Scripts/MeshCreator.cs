@@ -25,10 +25,11 @@ public class MeshCreator : MonoBehaviour {
 		for (int i = 0; i < 10; i++)
 		{
 			gO.Add(Generate ());
+			gO [i].name = "Grid" + i;
 			gO [i].transform.position = pos;
 			pos.y += 47;
 		}
-		Debug.Log(gO [0].transform);
+		this.transform.Rotate (90f, 0f, 0f);
 	}
 
 	void Start()
@@ -70,6 +71,7 @@ public class MeshCreator : MonoBehaviour {
 			positions [sizeOfMesh - 1].z = positions [sizeOfMesh - 2].z;
 
 			gO [meshCounter].GetComponent<MeshFilter> ().mesh.vertices = positions;
+			gO [meshCounter].GetComponent<MeshFilter> ().mesh.RecalculateNormals ();
 		}
 	}
 
@@ -108,6 +110,7 @@ public class MeshCreator : MonoBehaviour {
 				positions [sizeOfMesh - 1].z = positions [sizeOfMesh - 2].z;
 
 				gO [meshCounter].GetComponent<MeshFilter> ().mesh.vertices = positions;
+				gO [meshCounter].GetComponent<MeshFilter> ().mesh.RecalculateNormals ();
 			}
 		}
 	}
@@ -120,6 +123,7 @@ public class MeshCreator : MonoBehaviour {
 		mesh = new Mesh ();
 		gameObj.AddComponent<MeshFilter>().mesh = mesh;
 		gameObj.AddComponent<MeshRenderer> ();
+		gameObj.AddComponent<MeshCollider> ();
 		mesh.name = "Grid";
 		vertices = new Vector3[(xSize + 1) * (ySize + 1)];
 		Vector2[] uv = new Vector2[vertices.Length];
@@ -144,6 +148,7 @@ public class MeshCreator : MonoBehaviour {
 		mesh.triangles = triangles;
 		mesh.RecalculateNormals();
 		gameObj.GetComponent<MeshRenderer>().material = this.GetComponent<MeshRenderer>().material;
+		gameObj.GetComponent<MeshCollider> ().sharedMesh = gameObj.GetComponent<MeshFilter> ().sharedMesh;
 		gameObj.transform.SetParent (this.transform);
 		return gameObj;
 	}
