@@ -16,7 +16,8 @@ public class updateText : MonoBehaviour {
 
 	void getTextFromNetwork()
 	{
-		string tempStr = NetworkClient.instance.receiveSocket();
+		//(string tempStr = NetworkClient.instance.receiveSocket();
+        string tempStr ="";
         if (tempStr != "")
 		{
             Debug.Log(tempStr);
