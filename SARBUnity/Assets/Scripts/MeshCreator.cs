@@ -60,6 +60,7 @@ public class MeshCreator : MonoBehaviour {
 				{
 					gO [meshCounter].GetComponent<MeshFilter> ().mesh.vertices = positions;
 					gO [meshCounter].GetComponent<MeshFilter> ().mesh.RecalculateNormals ();
+					gO [meshCounter].GetComponent<MeshFilter> ().mesh.RecalculateBounds ();
 					meshCounter++;
 					positions = gO [meshCounter].GetComponent<MeshFilter> ().mesh.vertices;
 				}
@@ -72,6 +73,7 @@ public class MeshCreator : MonoBehaviour {
 
 			gO [meshCounter].GetComponent<MeshFilter> ().mesh.vertices = positions;
 			gO [meshCounter].GetComponent<MeshFilter> ().mesh.RecalculateNormals ();
+			gO [meshCounter].GetComponent<MeshFilter> ().mesh.RecalculateBounds ();
 		}
 	}
 
@@ -98,11 +100,13 @@ public class MeshCreator : MonoBehaviour {
 					{
 						gO [meshCounter].GetComponent<MeshFilter> ().mesh.vertices = positions;
 						gO [meshCounter].GetComponent<MeshFilter> ().mesh.RecalculateNormals ();
+						gO [meshCounter].GetComponent<MeshFilter> ().mesh.RecalculateBounds ();
 						meshCounter++;
 						positions = gO [meshCounter].GetComponent<MeshFilter> ().mesh.vertices;
 					}
 				}
-				yield return new WaitForEndOfFrame();
+				//This happens because you don't set the mesh to be equal to the positions.
+				yield return null;
 			}
 			if (meshCounter == 9)
 			{
@@ -111,6 +115,7 @@ public class MeshCreator : MonoBehaviour {
 
 				gO [meshCounter].GetComponent<MeshFilter> ().mesh.vertices = positions;
 				gO [meshCounter].GetComponent<MeshFilter> ().mesh.RecalculateNormals ();
+				gO [meshCounter].GetComponent<MeshFilter> ().mesh.RecalculateBounds ();
 			}
 		}
 	}
