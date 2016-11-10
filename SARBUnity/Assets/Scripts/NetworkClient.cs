@@ -4,6 +4,9 @@ using System;
 using System.IO;
 using System.Net.Sockets;
 using System.Text;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 
 public class NetworkClient : MonoBehaviour
 {
@@ -21,6 +24,8 @@ public class NetworkClient : MonoBehaviour
     public static NetworkClient instance = null;
     StreamWriter streamWriter;
     StreamReader streamReader;
+    Thread thread;
+
 
 
 
@@ -65,7 +70,11 @@ public class NetworkClient : MonoBehaviour
             this.streamWriter = new StreamWriter(this.netStream);
             this.streamReader = new StreamReader(this.netStream);
             this.socketReady = true;
+            thread = new Thread(new ThreadStart(receiveSocket));
+            thread.Start();
+            while (!thread.IsAlive);
             Debug.Log("Connected to: " + this.hostname + " Port: " + this.port);
+            
         }
 
         catch (Exception e)
@@ -75,112 +84,81 @@ public class NetworkClient : MonoBehaviour
         }
     }
 
-    public void writeSocket(string line)
+    public void writeSocket(string line, int command)
     {
         if (!this.socketReady)
             return;
 
         // Consider a string builder for better performance here
-        string datasize = "0000000";
-        char[] tempArray = datasize.ToCharArray();
-        string sizeOfMessage = line.Length.ToString();
-        int offset = sizeOfMessage.Length-1;
-        for(int i = datasize.Length-1; i > ((datasize.Length-1) - sizeOfMessage.Length); i--)
+        if (command == 1)
         {
-            tempArray[i] = sizeOfMessage.ToCharArray()[offset];
-            offset--;
+            // Send the header
+            ASCIIEncoding asen = new ASCIIEncoding();
+            Byte[] Buffer = asen.GetBytes(sendHeader(line.Length, command));
+            netStream.Write(Buffer, 0, Buffer.Length);
+
+            // send the data
+            Buffer = asen.GetBytes(line);
+            netStream.Write(Buffer, 0, Buffer.Length);
         }
+        if(command == 2)
+        {
+            // Send the header
+            ASCIIEncoding asen = new ASCIIEncoding();
+            Byte[] Buffer = asen.GetBytes("000000000|0002");
+            netStream.Write(Buffer, 0, Buffer.Length);
 
-       
-        datasize = new string(tempArray);
-
-        // Send the header
-        ASCIIEncoding asen = new ASCIIEncoding();
-        Byte[] Buffer = asen.GetBytes(datasize);
-        netStream.Write(Buffer, 0, Buffer.Length);
-
-        // send the data
-        Buffer = asen.GetBytes(line);
-        netStream.Write(Buffer, 0, Buffer.Length);
-
+            // send the data
+            Buffer = asen.GetBytes(line);
+            netStream.Write(Buffer, 0, Buffer.Length);
+        }
 
     }
 
-public string receiveSocket()
+public void receiveSocket()
 {
         string message = "";
         if (!this.socketReady)
-            return message;
+            return;
 
-        // Read data
-        if (netStream.DataAvailable)
+        while (thread.IsAlive)
         {
-            // Read header
-            byte[] header = new byte[7];
-            int size = netStream.Read(header, 0, 7);
-            char[] array = new char[size];
+            int packageSize = 0;
+            int packageCommand = 0;
 
-            for (int i = 0; i < size; i++)
+            // Read data
+            if (netStream.CanRead)
             {
-                array[i] = Convert.ToChar(header[i]);
-            }
 
-            string tempSize = "";
-            
-            
-            // get the size:
-            for (int i = 0; i < size; i++)
-            {
-               tempSize = tempSize + array[i].ToString();
-            }
-
-            int packageSize = Convert.ToInt32(tempSize);
+                // while (netStream.DataAvailable)
+                // {
 
 
-            // read the package
-            if(packageSize > 0)
-            {
-                int storageSize = 2048;
-                Byte[] storageBuffer = new Byte[storageSize];
-                do
+
+                while (readHeader(ref packageSize, ref packageCommand))
                 {
-                    int readSize = 0;
-                    if (storageSize < packageSize)
+
+
+                    // Read the Header
+                    if (packageCommand == 1)
                     {
-                        readSize = storageBuffer.Length;
+                        message = readEcho(packageSize);
+                        Debug.Log(message);
+
                     }
 
-                    else
+                    // read the heightmap
+                    if (packageCommand == 2)
                     {
-                        readSize = packageSize;
+                        readHeightMap(packageSize);
+
                     }
-
-                    storageBuffer = readData(readSize);
-
-                     for (int i = 0; i < storageBuffer.Length; i++)
-                    {
-                          message = message + "" + (Convert.ToChar(storageBuffer[i]).ToString());
-                    }
-                    Debug.Log("MESSAGE " + message);
-                    message = "";
-                    packageSize -= readSize;
-
-
+                    packageCommand = 0;
+                    packageSize = 0;
                 }
-                while (packageSize>0);
-                
+
             }
-
-            //for (int i = 0; i < dataBuffer.Length; i++)
-            //{
-            //    message = message + "" + (Convert.ToChar(dataBuffer[i]).ToString());
-            //}
-           // Debug.Log("MESSAGE " + message);
-
-            return message;
         }
-        String noMessage = "";
-        return noMessage;
 }
 
 
@@ -205,9 +183,148 @@ public string receiveSocket()
            int bytes = netStream.Read(buffer, 0, size);
            size -= bytes;
         }
-        
+
         return buffer;
     }
 
+    private bool readHeader(ref int packageSize,  ref int packageCommand)
+    {
 
+        // Read header
+        byte[] header = new byte[14];
+        int size = netStream.Read(header, 0, 14);
+
+        if(size < 0)
+        {
+            Debug.Log("readHeader false");
+            return false;
+        }
+
+        char[] array = new char[size];
+        for (int i = 0; i < size; i++)
+        {
+            array[i] = Convert.ToChar(header[i]);
+        }
+
+
+        packageSize = Convert.ToInt32(parseheader(array, 0, 9));
+        packageCommand = Convert.ToInt32(parseheader(array, 10, 14));
+
+        Debug.Log("PackageSize: " + packageSize + "      " + "PackageCommand: " + packageCommand);
+        return true;
+
+    }
+
+
+    private string parseheader(char[] array, int start, int end)
+    {
+        string temp = "";
+
+       
+        for (int i = start; i < end; i++)
+        {
+            temp = temp + array[i].ToString();
+        }
+
+        return temp;
+    }
+
+    private List<Byte[]> readHeightMap(int packageSize)
+    {
+        List<Byte[]> storeHeightMap = new List<Byte[]>();
+        if (packageSize > 0)
+        {
+            int storageSize = 640;
+            Byte[] storageBuffer = new Byte[storageSize];
+
+            // Reading heightmap
+            do
+            {
+                int readSize = 0;
+                readSize = Math.Min(storageBuffer.Length, packageSize);
+
+                storageBuffer = readData(readSize);
+                //storeHeightMap.Add(storageBuffer);
+                packageSize -= readSize;
+
+            }
+
+            while (packageSize > 0);
+        }
+
+        return storeHeightMap;
+    }
+
+
+
+    private string readEcho(int packageSize)
+    {
+        string echo = "";
+        if (packageSize > 0)
+        {
+            int storageSize = 2048;
+            Byte[] storageBuffer = new Byte[storageSize];
+
+            // Reading heightmap
+            do
+            {
+                int readSize = 0;
+                if (storageSize < packageSize)
+                {
+                    readSize = storageBuffer.Length;
+                }
+
+                else
+                {
+                    readSize = packageSize;
+                }
+
+                storageBuffer = readData(readSize);
+
+                for (int i = 0; i < storageBuffer.Length; i++)
+                {
+                    echo = echo + "" + (Convert.ToChar(storageBuffer[i]).ToString());
+                }
+                packageSize -= readSize;
+
+
+            }
+            while (packageSize > 0);
+        }
+
+        return echo;
+    }
+
+    private string sendHeader(int size, int command)
+    {
+        string header = "000000000|0000";
+        char[] tempArray =header.ToCharArray();
+        string sizeOfPackage = size.ToString();
+        string commandInString = command.ToString();
+
+
+        int offset = commandInString.Length - 1;
+        for (int i = header.Length - 1; i > ((header.Length - 1) - commandInString.Length); i--)
+        {
+            tempArray[i] = commandInString.ToCharArray()[offset];
+            offset--;
+        }
+
+        offset = sizeOfPackage.Length - 1;
+        for (int i = header.Length - 6; i > ((header.Length - 6) - sizeOfPackage.Length); i--)
+        {
+            tempArray[i] = sizeOfPackage.ToCharArray()[offset];
+            offset--;
+        }
+
+
+        header = new string(tempArray);
+
+        return header;
+    }
+
+    void OnDestroy()
+    {
+      //  thread.Join();
+    }
 }

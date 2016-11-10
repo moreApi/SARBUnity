@@ -3,31 +3,37 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
+//This class is very hardcoded at the moment.
+
 public class MeshCreator : MonoBehaviour {
 
 	public int xSize;
 	public int ySize;
+	
 	[HideInInspector]
 	public bool running = true;
-
+	
 	List<GameObject> gO;
 
 	private Mesh mesh;
 	private Vector3[] vertices;
+	int sizeOfMesh;
 
 
 	void Awake ()
 	{
+		sizeOfMesh = (xSize + 1) * (ySize + 1);
 		gO = new List<GameObject>();
 		Vector3 pos = new Vector3 (0, 0, 0);
 		for (int i = 0; i < 10; i++)
 		{
 			gO.Add(Generate ());
+			gO [i].name = "Grid" + i;
 			gO [i].transform.position = pos;
 			gO [i].name = "Planegrid " + i;
 			pos.y += 47;
 		}
-		Debug.Log(gO [0].transform);
+		this.transform.Rotate (90f, 0f, 0f);
 	}
 
 	void Start()
@@ -42,10 +48,7 @@ public class MeshCreator : MonoBehaviour {
 
 	void forceUpdate()
 	{
-		int sizeOfMesh = 480 * 64;
 		List<string[]> myStrings = this.GetComponent<StringParser> ().myStrings;
-		//Debug.Log (myStrings.Count);
-		//Debug.Log (myStrings[0].Length);
 		Vector3[] positions = gO [0].GetComponent<MeshFilter> ().mesh.vertices;
 		Debug.Log(gO [0].GetComponent<MeshFilter> ().mesh.vertices.Length);
 		int meshCounter = 0;
@@ -54,7 +57,6 @@ public class MeshCreator : MonoBehaviour {
 		{
 			for (int i = 0; i < 480; i++)
 			{
-				//posCounterPro = (i + 1) + (j + 1) % 30720;
 				positions [posCounter].z = float.Parse (myStrings [j] [i]) / 10.0f;
 				posCounter = (i + (j * 480)) % sizeOfMesh;
 
@@ -62,27 +64,26 @@ public class MeshCreator : MonoBehaviour {
 				{
 					gO [meshCounter].GetComponent<MeshFilter> ().mesh.vertices = positions;
 					gO [meshCounter].GetComponent<MeshFilter> ().mesh.RecalculateNormals ();
+					gO [meshCounter].GetComponent<MeshFilter> ().mesh.RecalculateBounds ();
 					meshCounter++;
 					positions = gO [meshCounter].GetComponent<MeshFilter> ().mesh.vertices;
 				}
 			}
 		}
-		for (int i = 0; i < positions.Length; i++)
-		{
-			//Debug.Log(float.Parse(myStrings [0][i]) / 100f);
-		}
 		if (meshCounter == 9)
 		{
+			//Hacky solution to get the last position in the top mesh to not be 0.
+			positions [sizeOfMesh - 1].z = positions [sizeOfMesh - 2].z;
+
 			gO [meshCounter].GetComponent<MeshFilter> ().mesh.vertices = positions;
+			gO [meshCounter].GetComponent<MeshFilter> ().mesh.RecalculateNormals ();
+			gO [meshCounter].GetComponent<MeshFilter> ().mesh.RecalculateBounds ();
 		}
 	}
 
 	IEnumerator UpdateMesh()
 	{
-		int sizeOfMesh = 480 * 64;
 		List<string[]> myStrings = this.GetComponent<StringParser> ().myStrings;
-		//Debug.Log (myStrings.Count);
-		//Debug.Log (myStrings[0].Length);
 		Vector3[] positions = gO [0].GetComponent<MeshFilter> ().mesh.vertices;
 		Debug.Log(gO [0].GetComponent<MeshFilter> ().mesh.vertices.Length);
 		int meshCounter = 0;
@@ -96,7 +97,6 @@ public class MeshCreator : MonoBehaviour {
 			{
 				for (int i = 0; i < 480; i++)
 				{
-					//posCounterPro = (i + 1) + (j + 1) % 30720;
 					positions [posCounter].z = float.Parse (myStrings [j] [i]) / 10.0f;
 					posCounter = (i + (j * 480)) % sizeOfMesh;
 
@@ -104,32 +104,35 @@ public class MeshCreator : MonoBehaviour {
 					{
 						gO [meshCounter].GetComponent<MeshFilter> ().mesh.vertices = positions;
 						gO [meshCounter].GetComponent<MeshFilter> ().mesh.RecalculateNormals ();
+						gO [meshCounter].GetComponent<MeshFilter> ().mesh.RecalculateBounds ();
 						meshCounter++;
 						positions = gO [meshCounter].GetComponent<MeshFilter> ().mesh.vertices;
 					}
 				}
-				yield return new WaitForSeconds (0.001f);
-			}
-			for (int i = 0; i < positions.Length; i++)
-			{
-				//Debug.Log(float.Parse(myStrings [0][i]) / 100f);
+				//This happens because you don't set the mesh to be equal to the positions.
+				yield return null;
 			}
 			if (meshCounter == 9)
 			{
+				//Hacky solution to get the last position in the top mesh to not be 0.
+				positions [sizeOfMesh - 1].z = positions [sizeOfMesh - 2].z;
+
 				gO [meshCounter].GetComponent<MeshFilter> ().mesh.vertices = positions;
+				gO [meshCounter].GetComponent<MeshFilter> ().mesh.RecalculateNormals ();
+				gO [meshCounter].GetComponent<MeshFilter> ().mesh.RecalculateBounds ();
 			}
 		}
 	}
 
+
+	//http://catlikecoding.com/unity/tutorials/procedural-grid/
 	private GameObject Generate()
 	{
 		GameObject gameObj = new GameObject ();
-		//Mesh newMesh = gameObj.AddComponent<Mesh> () as Mesh;
-		//MeshFilter newMeshFilter = gameObj.AddComponent<MeshFilter> () as MeshFilter;
 		mesh = new Mesh ();
 		gameObj.AddComponent<MeshFilter>().mesh = mesh;
 		gameObj.AddComponent<MeshRenderer> ();
-		//gameObj.GetComponent<MeshFilter> ().mesh = 
+		gameObj.AddComponent<MeshCollider> ();
 		mesh.name = "Grid";
 		vertices = new Vector3[(xSize + 1) * (ySize + 1)];
 		Vector2[] uv = new Vector2[vertices.Length];
@@ -154,6 +157,7 @@ public class MeshCreator : MonoBehaviour {
 		mesh.triangles = triangles;
 		mesh.RecalculateNormals();
 		gameObj.GetComponent<MeshRenderer>().material = this.GetComponent<MeshRenderer>().material;
+		gameObj.GetComponent<MeshCollider> ().sharedMesh = gameObj.GetComponent<MeshFilter> ().sharedMesh;
 		gameObj.transform.SetParent (this.transform);
 		return gameObj;
 	}
