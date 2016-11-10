@@ -6,7 +6,9 @@ using System.Text.RegularExpressions;
 public class StringParser : MonoBehaviour {
 
 	string toParse;
+	[HideInInspector]
 	public List<string[]> myStrings;
+
 	// Use this for initialization
 	void Start () {
 

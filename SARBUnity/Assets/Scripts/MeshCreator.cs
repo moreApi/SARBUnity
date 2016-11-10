@@ -7,13 +7,13 @@ public class MeshCreator : MonoBehaviour {
 
 	public int xSize;
 	public int ySize;
-
-	int tempcounter = 0;
+	[HideInInspector]
+	public bool running = true;
 
 	List<GameObject> gO;
+
 	private Mesh mesh;
 	private Vector3[] vertices;
-	bool running = true;
 
 
 	void Awake ()
@@ -24,6 +24,7 @@ public class MeshCreator : MonoBehaviour {
 		{
 			gO.Add(Generate ());
 			gO [i].transform.position = pos;
+			gO [i].name = "Planegrid " + i;
 			pos.y += 47;
 		}
 		Debug.Log(gO [0].transform);
