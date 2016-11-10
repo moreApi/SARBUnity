@@ -6,6 +6,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 
 public class NetworkClient : MonoBehaviour
 {
@@ -23,6 +24,7 @@ public class NetworkClient : MonoBehaviour
     public static NetworkClient instance = null;
     StreamWriter streamWriter;
     StreamReader streamReader;
+    Thread thread;
 
 
 
@@ -68,7 +70,11 @@ public class NetworkClient : MonoBehaviour
             this.streamWriter = new StreamWriter(this.netStream);
             this.streamReader = new StreamReader(this.netStream);
             this.socketReady = true;
+            thread = new Thread(new ThreadStart(receiveSocket));
+            thread.Start();
+            while (!thread.IsAlive);
             Debug.Log("Connected to: " + this.hostname + " Port: " + this.port);
+            
         }
 
         catch (Exception e)
@@ -109,36 +115,50 @@ public class NetworkClient : MonoBehaviour
 
     }
 
-public string receiveSocket()
+public void receiveSocket()
 {
         string message = "";
         if (!this.socketReady)
-            return message;
+            return;
 
-        // Read data
-        if (netStream.DataAvailable)
+        while (thread.IsAlive)
         {
+            int packageSize = 0;
+            int packageCommand = 0;
 
-          // Read the Header
-           int packageSize = 0;
-           int packageCommand = 0;
-           readHeader(ref packageSize, ref packageCommand);
-
-            if(packageCommand == 1)
+            // Read data
+            if (netStream.CanRead)
             {
-              message =  readEcho(packageSize);
-            }
 
-            // read the heightmap
-            if (packageCommand == 2)
-            {
-                readHeightMap(packageSize);
-            }
+                // while (netStream.DataAvailable)
+                // {
 
-            return message;
+
+
+                while (readHeader(ref packageSize, ref packageCommand))
+                {
+
+
+                    // Read the Header
+                    if (packageCommand == 1)
+                    {
+                        message = readEcho(packageSize);
+                        Debug.Log(message);
+
+                    }
+
+                    // read the heightmap
+                    if (packageCommand == 2)
+                    {
+                        readHeightMap(packageSize);
+
+                    }
+                    packageCommand = 0;
+                    packageSize = 0;
+                }
+
+            }
         }
-        String noMessage = "";
-        return noMessage;
 }
 
 
@@ -163,17 +183,22 @@ public string receiveSocket()
            int bytes = netStream.Read(buffer, 0, size);
            size -= bytes;
         }
-        
+
         return buffer;
     }
 
-    private void readHeader(ref int packageSize,  ref int packageCommand)
+    private bool readHeader(ref int packageSize,  ref int packageCommand)
     {
 
         // Read header
         byte[] header = new byte[14];
         int size = netStream.Read(header, 0, 14);
 
+        if(size < 0)
+        {
+            Debug.Log("readHeader false");
+            return false;
+        }
 
         char[] array = new char[size];
         for (int i = 0; i < size; i++)
@@ -186,6 +211,7 @@ public string receiveSocket()
         packageCommand = Convert.ToInt32(parseheader(array, 10, 14));
 
         Debug.Log("PackageSize: " + packageSize + "      " + "PackageCommand: " + packageCommand);
+        return true;
 
     }
 
@@ -203,50 +229,27 @@ public string receiveSocket()
         return temp;
     }
 
-    private List<string> readHeightMap(int packageSize)
+    private List<Byte[]> readHeightMap(int packageSize)
     {
-        List<string> storeHeightMap = new List<string>();
-        string message = "";
-
+        List<Byte[]> storeHeightMap = new List<Byte[]>();
         if (packageSize > 0)
         {
-            int storageSize = 2048;
+            int storageSize = 640;
             Byte[] storageBuffer = new Byte[storageSize];
 
             // Reading heightmap
             do
             {
                 int readSize = 0;
-                if (storageSize < packageSize)
-                {
-                    readSize = storageBuffer.Length;
-                }
-
-                else
-                {
-                    readSize = packageSize;
-                }
+                readSize = Math.Min(storageBuffer.Length, packageSize);
 
                 storageBuffer = readData(readSize);
-
-                for (int i = 0; i < storageBuffer.Length; i++)
-                {
-                    message = message + "" + (Convert.ToChar(storageBuffer[i]).ToString());
-                }
-                
-                storeHeightMap.Add(message);
-
-                message = "";
+                //storeHeightMap.Add(storageBuffer);
                 packageSize -= readSize;
 
             }
 
             while (packageSize > 0);
-        }
-
-        for(int i=0; i < storeHeightMap.Count(); i++)
-        {
-            Debug.Log(storeHeightMap[i]);
         }
 
         return storeHeightMap;
@@ -320,5 +323,8 @@ public string receiveSocket()
         return header;
     }
 
-
+    void OnDestroy()
+    {
+      //  thread.Join();
+    }
 }
