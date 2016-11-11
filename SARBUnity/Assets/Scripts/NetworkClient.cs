@@ -25,6 +25,8 @@ public class NetworkClient : MonoBehaviour
     StreamWriter streamWriter;
     StreamReader streamReader;
     Thread thread;
+    List<Byte[]> list = new List<Byte[]>(1000);
+    int heightMapStorageSize;
 
 
 
@@ -58,6 +60,11 @@ public class NetworkClient : MonoBehaviour
         this.port = port;
     }
 
+    public void updateHeightmapStorageSize(int size)
+    {
+        this.heightMapStorageSize = size;
+    }
+
 
 
     public void initTcpClient()
@@ -70,9 +77,10 @@ public class NetworkClient : MonoBehaviour
             this.streamWriter = new StreamWriter(this.netStream);
             this.streamReader = new StreamReader(this.netStream);
             this.socketReady = true;
-            thread = new Thread(new ThreadStart(receiveSocket));
-            thread.Start();
-            while (!thread.IsAlive);
+            this.heightMapStorageSize = 5000;
+            this.thread = new Thread(new ThreadStart(receiveSocket));
+            this.thread.Start();
+            while (!this.thread.IsAlive);
             Debug.Log("Connected to: " + this.hostname + " Port: " + this.port);
             
         }
@@ -95,11 +103,11 @@ public class NetworkClient : MonoBehaviour
             // Send the header
             ASCIIEncoding asen = new ASCIIEncoding();
             Byte[] Buffer = asen.GetBytes(sendHeader(line.Length, command));
-            netStream.Write(Buffer, 0, Buffer.Length);
+           this.netStream.Write(Buffer, 0, Buffer.Length);
 
             // send the data
             Buffer = asen.GetBytes(line);
-            netStream.Write(Buffer, 0, Buffer.Length);
+            this.netStream.Write(Buffer, 0, Buffer.Length);
         }
         if(command == 2)
         {
@@ -110,7 +118,7 @@ public class NetworkClient : MonoBehaviour
 
             // send the data
             Buffer = asen.GetBytes(line);
-            netStream.Write(Buffer, 0, Buffer.Length);
+            this.netStream.Write(Buffer, 0, Buffer.Length);
         }
 
     }
@@ -121,13 +129,13 @@ public void receiveSocket()
         if (!this.socketReady)
             return;
 
-        while (thread.IsAlive)
+        while (this.thread.IsAlive)
         {
             int packageSize = 0;
             int packageCommand = 0;
 
             // Read data
-            if (netStream.CanRead)
+            if (this.netStream.CanRead)
             {
 
                 // while (netStream.DataAvailable)
@@ -180,7 +188,7 @@ public void receiveSocket()
         Byte[] buffer = new Byte[size];
         while (size>0)
         {
-           int bytes = netStream.Read(buffer, 0, size);
+           int bytes = this.netStream.Read(buffer, 0, size);
            size -= bytes;
         }
 
@@ -192,7 +200,7 @@ public void receiveSocket()
 
         // Read header
         byte[] header = new byte[14];
-        int size = netStream.Read(header, 0, 14);
+        int size = this.netStream.Read(header, 0, 14);
 
         if(size < 0)
         {
@@ -234,7 +242,7 @@ public void receiveSocket()
         List<Byte[]> storeHeightMap = new List<Byte[]>();
         if (packageSize > 0)
         {
-            int storageSize = 640;
+            int storageSize = heightMapStorageSize;
             Byte[] storageBuffer = new Byte[storageSize];
 
             // Reading heightmap
@@ -269,15 +277,7 @@ public void receiveSocket()
             do
             {
                 int readSize = 0;
-                if (storageSize < packageSize)
-                {
-                    readSize = storageBuffer.Length;
-                }
-
-                else
-                {
-                    readSize = packageSize;
-                }
+                readSize = Math.Min(storageBuffer.Length, packageSize);
 
                 storageBuffer = readData(readSize);
 
@@ -298,7 +298,7 @@ public void receiveSocket()
     private string sendHeader(int size, int command)
     {
         string header = "000000000|0000";
-        char[] tempArray =header.ToCharArray();
+        char[] tempArray = header.ToCharArray();
         string sizeOfPackage = size.ToString();
         string commandInString = command.ToString();
 
