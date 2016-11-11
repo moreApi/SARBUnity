@@ -25,8 +25,9 @@ public class NetworkClient : MonoBehaviour
     StreamWriter streamWriter;
     StreamReader streamReader;
     Thread thread;
-    List<Byte[]> list = new List<Byte[]>(1000);
     int heightMapStorageSize;
+    List<Byte[]> storeHeightMap = new List<Byte[]>(1000);
+
 
 
 
@@ -77,11 +78,18 @@ public class NetworkClient : MonoBehaviour
             this.streamWriter = new StreamWriter(this.netStream);
             this.streamReader = new StreamReader(this.netStream);
             this.socketReady = true;
-            this.heightMapStorageSize = 5000;
+
+            this.heightMapStorageSize = 5200;
+            for(int i = 0; i < 1000; i++)
+            {
+                storeHeightMap.Add(null);
+            }
+
             this.thread = new Thread(new ThreadStart(receiveSocket));
             this.thread.Start();
             while (!this.thread.IsAlive);
             Debug.Log("Connected to: " + this.hostname + " Port: " + this.port);
+
             
         }
 
@@ -170,19 +178,6 @@ public void receiveSocket()
 }
 
 
-    // Close the sockets and readers
-    
-    public void closeSocket()
-    {
-        if (!this.socketReady)
-            return;
-
-        this.streamWriter.Close();
-        this.streamReader.Close();
-        this.tcpSocket.Close();
-        this.socketReady = false;
-    }
-
     private Byte[] readData(int size)
     {
         Byte[] buffer = new Byte[size];
@@ -239,7 +234,9 @@ public void receiveSocket()
 
     private List<Byte[]> readHeightMap(int packageSize)
     {
-        List<Byte[]> storeHeightMap = new List<Byte[]>();
+        // List<Byte[]> storeHeightMap = new List<Byte[]>();
+
+        int listIndex = 0;
         if (packageSize > 0)
         {
             int storageSize = heightMapStorageSize;
@@ -252,15 +249,14 @@ public void receiveSocket()
                 readSize = Math.Min(storageBuffer.Length, packageSize);
 
                 storageBuffer = readData(readSize);
-                //storeHeightMap.Add(storageBuffer);
+                storeHeightMap[listIndex++]  =  storageBuffer;
                 packageSize -= readSize;
 
             }
 
             while (packageSize > 0);
         }
-
-        return storeHeightMap;
+        return null;
     }
 
 
@@ -323,8 +319,18 @@ public void receiveSocket()
         return header;
     }
 
-    void OnDestroy()
+
+    // Close the sockets and readers
+
+    public void closeSocket()
     {
-      //  thread.Join();
+        if (!this.socketReady)
+            return;
+        this.thread.Join();
+        this.streamWriter.Close();
+        this.streamReader.Close();
+        this.tcpSocket.Close();
+        this.socketReady = false;
+       
     }
 }
