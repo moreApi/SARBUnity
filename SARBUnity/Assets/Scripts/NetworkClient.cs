@@ -131,8 +131,10 @@ public class NetworkClient : MonoBehaviour
 
     }
 
-public void receiveSocket()
-{
+
+    public void receiveSocket()
+    {
+
         string message = "";
         if (!this.socketReady)
             return;
@@ -145,12 +147,6 @@ public void receiveSocket()
             // Read data
             if (this.netStream.CanRead)
             {
-
-                // while (netStream.DataAvailable)
-                // {
-
-
-
                 while (readHeader(ref packageSize, ref packageCommand))
                 {
 
@@ -167,15 +163,18 @@ public void receiveSocket()
                     if (packageCommand == 2)
                     {
                         readHeightMap(packageSize);
+                        //for (int i = 0; i < storeHeightMap.Count; i++)
+                        //{
+                        //    Debug.Log("" + (System.Text.Encoding.UTF8.GetString(storeHeightMap[i])));
+                        //}
 
                     }
                     packageCommand = 0;
                     packageSize = 0;
                 }
-
-            }
+            }         
         }
-}
+    }
 
 
     private Byte[] readData(int size)
@@ -239,22 +238,19 @@ public void receiveSocket()
         int listIndex = 0;
         if (packageSize > 0)
         {
-            int storageSize = heightMapStorageSize;
-            Byte[] storageBuffer = new Byte[storageSize];
+            Byte[] storageBuffer = new Byte[heightMapStorageSize];
 
             // Reading heightmap
-            do
+            while (packageSize > 0)
             {
                 int readSize = 0;
                 readSize = Math.Min(storageBuffer.Length, packageSize);
 
                 storageBuffer = readData(readSize);
-                storeHeightMap[listIndex++]  =  storageBuffer;
+                //storeHeightMap[listIndex++] = storageBuffer;
                 packageSize -= readSize;
-
             }
-
-            while (packageSize > 0);
+           
         }
         return null;
     }
@@ -269,9 +265,8 @@ public void receiveSocket()
             int storageSize = 2048;
             Byte[] storageBuffer = new Byte[storageSize];
 
-            // Reading heightmap
-            do
-            {
+          while(packageSize > 0)
+          { 
                 int readSize = 0;
                 readSize = Math.Min(storageBuffer.Length, packageSize);
 
@@ -285,7 +280,6 @@ public void receiveSocket()
 
 
             }
-            while (packageSize > 0);
         }
 
         return echo;
