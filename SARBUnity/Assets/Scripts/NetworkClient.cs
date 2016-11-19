@@ -26,7 +26,7 @@ public class NetworkClient : MonoBehaviour
     StreamReader streamReader;
     Thread thread;
     int heightMapStorageSize;
-    List<Byte[]> storeHeightMap = new List<Byte[]>(1000);
+    List<Byte[]> storeHeightMap;
 
 
 
@@ -43,8 +43,9 @@ public class NetworkClient : MonoBehaviour
         {
             Destroy(gameObject);
         }
-
         DontDestroyOnLoad(gameObject);
+
+		storeHeightMap = new List<byte[]>();
     }
 
 
@@ -79,12 +80,7 @@ public class NetworkClient : MonoBehaviour
             this.streamReader = new StreamReader(this.netStream);
             this.socketReady = true;
 
-            this.heightMapStorageSize = 5200;
-            for(int i = 0; i < 1000; i++)
-            {
-                storeHeightMap.Add(null);
-            }
-
+            this.heightMapStorageSize = 1920;
             this.thread = new Thread(new ThreadStart(receiveSocket));
             this.thread.Start();
             while (!this.thread.IsAlive);
@@ -176,6 +172,22 @@ public class NetworkClient : MonoBehaviour
         }
     }
 
+	public string getHeightData()
+	{
+		List<Byte[]> tempHeightMap = storeHeightMap;
+		string tempStr = "";
+		for (int i = 0; i < tempHeightMap.Count; i++)
+		{
+			//Debug.Log("" + (System.Text.Encoding.UTF8.GetString(storeHeightMap[i])));
+			//for (int j = 0; j < tempHeightMap [i].Length && tempHeightMap[i][j] != null; j++)
+			//{
+			//	tempStr += (char)(tempHeightMap [i] [j]);
+			//}
+			tempStr += System.Text.Encoding.ASCII.GetString (tempHeightMap [i]);
+		}
+		Debug.Log ("NS " + tempStr.Length);
+		return tempStr;
+	}
 
     private Byte[] readData(int size)
     {
@@ -233,9 +245,8 @@ public class NetworkClient : MonoBehaviour
 
     private List<Byte[]> readHeightMap(int packageSize)
     {
-        // List<Byte[]> storeHeightMap = new List<Byte[]>();
-
         int listIndex = 0;
+		storeHeightMap.Clear ();
         if (packageSize > 0)
         {
             Byte[] storageBuffer = new Byte[heightMapStorageSize];
@@ -247,10 +258,10 @@ public class NetworkClient : MonoBehaviour
                 readSize = Math.Min(storageBuffer.Length, packageSize);
 
                 storageBuffer = readData(readSize);
-                //storeHeightMap[listIndex++] = storageBuffer;
-                packageSize -= readSize;
+				storeHeightMap.Add(storageBuffer);
+				packageSize -= readSize;
+				Thread.Sleep (1);
             }
-           
         }
         return null;
     }

@@ -42,8 +42,10 @@ public class MeshCreator : MonoBehaviour {
 		StartCoroutine(UpdateMesh ());
 	}
 
-	void Update()
+	public void updateHeightData()
 	{
+		Debug.Log("MeshCreator" + NetworkClient.instance.getHeightData ());
+		this.GetComponent<StringParser> ().updateString(NetworkClient.instance.getHeightData ());
 	}
 
 	void forceUpdate()
@@ -83,13 +85,14 @@ public class MeshCreator : MonoBehaviour {
 
 	IEnumerator UpdateMesh()
 	{
-		List<string[]> myStrings = this.GetComponent<StringParser> ().myStrings;
+		List<string[]> myStrings;
 		Vector3[] positions = gO [0].GetComponent<MeshFilter> ().mesh.vertices;
 		Debug.Log(gO [0].GetComponent<MeshFilter> ().mesh.vertices.Length);
 		int meshCounter = 0;
 		int posCounter = 0;
 		while (running)
 		{
+			myStrings = this.GetComponent<StringParser> ().myStrings;
 			meshCounter = 0;
 			posCounter = 0;
 			positions = gO [0].GetComponent<MeshFilter> ().mesh.vertices;
