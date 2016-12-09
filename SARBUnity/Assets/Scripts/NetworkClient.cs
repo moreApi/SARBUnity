@@ -25,6 +25,9 @@ public class NetworkClient : MonoBehaviour
     StreamWriter streamWriter;
     StreamReader streamReader;
     Thread thread;
+    int heightMapStorageSize;
+    List<Byte[]> storeHeightMap;
+
 
 
 
@@ -40,8 +43,9 @@ public class NetworkClient : MonoBehaviour
         {
             Destroy(gameObject);
         }
-
         DontDestroyOnLoad(gameObject);
+
+		storeHeightMap = new List<byte[]>();
     }
 
 
@@ -58,6 +62,11 @@ public class NetworkClient : MonoBehaviour
         this.port = port;
     }
 
+    public void updateHeightmapStorageSize(int size)
+    {
+        this.heightMapStorageSize = size;
+    }
+
 
 
     public void initTcpClient()
@@ -70,10 +79,13 @@ public class NetworkClient : MonoBehaviour
             this.streamWriter = new StreamWriter(this.netStream);
             this.streamReader = new StreamReader(this.netStream);
             this.socketReady = true;
-            thread = new Thread(new ThreadStart(receiveSocket));
-            thread.Start();
-            while (!thread.IsAlive);
+
+            this.heightMapStorageSize = 1920;
+            this.thread = new Thread(new ThreadStart(receiveSocket));
+            this.thread.Start();
+            while (!this.thread.IsAlive);
             Debug.Log("Connected to: " + this.hostname + " Port: " + this.port);
+
             
         }
 
@@ -95,11 +107,11 @@ public class NetworkClient : MonoBehaviour
             // Send the header
             ASCIIEncoding asen = new ASCIIEncoding();
             Byte[] Buffer = asen.GetBytes(sendHeader(line.Length, command));
-            netStream.Write(Buffer, 0, Buffer.Length);
+           this.netStream.Write(Buffer, 0, Buffer.Length);
 
             // send the data
             Buffer = asen.GetBytes(line);
-            netStream.Write(Buffer, 0, Buffer.Length);
+            this.netStream.Write(Buffer, 0, Buffer.Length);
         }
         if(command == 2)
         {
@@ -110,31 +122,27 @@ public class NetworkClient : MonoBehaviour
 
             // send the data
             Buffer = asen.GetBytes(line);
-            netStream.Write(Buffer, 0, Buffer.Length);
+            this.netStream.Write(Buffer, 0, Buffer.Length);
         }
 
     }
 
-public void receiveSocket()
-{
+
+    public void receiveSocket()
+    {
+
         string message = "";
         if (!this.socketReady)
             return;
 
-        while (thread.IsAlive)
+        while (this.thread.IsAlive)
         {
             int packageSize = 0;
             int packageCommand = 0;
 
             // Read data
-            if (netStream.CanRead)
+            if (this.netStream.CanRead)
             {
-
-                // while (netStream.DataAvailable)
-                // {
-
-
-
                 while (readHeader(ref packageSize, ref packageCommand))
                 {
 
@@ -151,36 +159,42 @@ public void receiveSocket()
                     if (packageCommand == 2)
                     {
                         readHeightMap(packageSize);
+                        //for (int i = 0; i < storeHeightMap.Count; i++)
+                        //{
+                        //    Debug.Log("" + (System.Text.Encoding.UTF8.GetString(storeHeightMap[i])));
+                        //}
 
                     }
                     packageCommand = 0;
                     packageSize = 0;
                 }
-
-            }
+            }         
         }
-}
-
-
-    // Close the sockets and readers
-    
-    public void closeSocket()
-    {
-        if (!this.socketReady)
-            return;
-
-        this.streamWriter.Close();
-        this.streamReader.Close();
-        this.tcpSocket.Close();
-        this.socketReady = false;
     }
+
+	public string getHeightData()
+	{
+		List<Byte[]> tempHeightMap = storeHeightMap;
+		string tempStr = "";
+		for (int i = 0; i < tempHeightMap.Count; i++)
+		{
+			//Debug.Log("" + (System.Text.Encoding.UTF8.GetString(storeHeightMap[i])));
+			//for (int j = 0; j < tempHeightMap [i].Length && tempHeightMap[i][j] != null; j++)
+			//{
+			//	tempStr += (char)(tempHeightMap [i] [j]);
+			//}
+			tempStr += System.Text.Encoding.ASCII.GetString (tempHeightMap [i]);
+		}
+		Debug.Log ("NS " + tempStr.Length);
+		return tempStr;
+	}
 
     private Byte[] readData(int size)
     {
         Byte[] buffer = new Byte[size];
         while (size>0)
         {
-           int bytes = netStream.Read(buffer, 0, size);
+           int bytes = this.netStream.Read(buffer, 0, size);
            size -= bytes;
         }
 
@@ -192,7 +206,7 @@ public void receiveSocket()
 
         // Read header
         byte[] header = new byte[14];
-        int size = netStream.Read(header, 0, 14);
+        int size = this.netStream.Read(header, 0, 14);
 
         if(size < 0)
         {
@@ -231,28 +245,25 @@ public void receiveSocket()
 
     private List<Byte[]> readHeightMap(int packageSize)
     {
-        List<Byte[]> storeHeightMap = new List<Byte[]>();
+        int listIndex = 0;
+		storeHeightMap.Clear ();
         if (packageSize > 0)
         {
-            int storageSize = 640;
-            Byte[] storageBuffer = new Byte[storageSize];
+            Byte[] storageBuffer = new Byte[heightMapStorageSize];
 
             // Reading heightmap
-            do
+            while (packageSize > 0)
             {
                 int readSize = 0;
                 readSize = Math.Min(storageBuffer.Length, packageSize);
 
                 storageBuffer = readData(readSize);
-                //storeHeightMap.Add(storageBuffer);
-                packageSize -= readSize;
-
+				storeHeightMap.Add(storageBuffer);
+				packageSize -= readSize;
+				Thread.Sleep (1);
             }
-
-            while (packageSize > 0);
         }
-
-        return storeHeightMap;
+        return null;
     }
 
 
@@ -265,19 +276,10 @@ public void receiveSocket()
             int storageSize = 2048;
             Byte[] storageBuffer = new Byte[storageSize];
 
-            // Reading heightmap
-            do
-            {
+          while(packageSize > 0)
+          { 
                 int readSize = 0;
-                if (storageSize < packageSize)
-                {
-                    readSize = storageBuffer.Length;
-                }
-
-                else
-                {
-                    readSize = packageSize;
-                }
+                readSize = Math.Min(storageBuffer.Length, packageSize);
 
                 storageBuffer = readData(readSize);
 
@@ -289,7 +291,6 @@ public void receiveSocket()
 
 
             }
-            while (packageSize > 0);
         }
 
         return echo;
@@ -298,7 +299,7 @@ public void receiveSocket()
     private string sendHeader(int size, int command)
     {
         string header = "000000000|0000";
-        char[] tempArray =header.ToCharArray();
+        char[] tempArray = header.ToCharArray();
         string sizeOfPackage = size.ToString();
         string commandInString = command.ToString();
 
@@ -323,8 +324,18 @@ public void receiveSocket()
         return header;
     }
 
-    void OnDestroy()
+
+    // Close the sockets and readers
+
+    public void closeSocket()
     {
-      //  thread.Join();
+        if (!this.socketReady)
+            return;
+        this.thread.Join();
+        this.streamWriter.Close();
+        this.streamReader.Close();
+        this.tcpSocket.Close();
+        this.socketReady = false;
+       
     }
 }

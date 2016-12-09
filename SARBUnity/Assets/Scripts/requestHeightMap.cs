@@ -3,11 +3,20 @@ using System.Collections;
 
 public class requestHeightMap : MonoBehaviour {
 
+	MeshCreator meshCreator;
+	void Start()
+	{
+		meshCreator = GameObject.Find ("PlaneGrid").GetComponent<MeshCreator> ();
+	}
+
+	public void updateHeightData()
+	{
+		meshCreator.updateHeightData ();
+	}
 
     public void sendStuff()
     {
         // Create some diversity in sending
-        int rnd = Random.Range(1, 5);
         NetworkClient.instance.writeSocket("",2);
     }
 }
