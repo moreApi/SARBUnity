@@ -65,6 +65,7 @@ public class MeshCreator : MonoBehaviour {
 					gO [meshCounter].GetComponent<MeshFilter> ().mesh.vertices = positions;
 					gO [meshCounter].GetComponent<MeshFilter> ().mesh.RecalculateNormals ();
 					gO [meshCounter].GetComponent<MeshFilter> ().mesh.RecalculateBounds ();
+					gO [meshCounter].GetComponent<MeshCollider> ().sharedMesh = gO [meshCounter].GetComponent<MeshFilter> ().sharedMesh;
 					meshCounter++;
 					positions = gO [meshCounter].GetComponent<MeshFilter> ().mesh.vertices;
 				}
@@ -78,6 +79,7 @@ public class MeshCreator : MonoBehaviour {
 			gO [meshCounter].GetComponent<MeshFilter> ().mesh.vertices = positions;
 			gO [meshCounter].GetComponent<MeshFilter> ().mesh.RecalculateNormals ();
 			gO [meshCounter].GetComponent<MeshFilter> ().mesh.RecalculateBounds ();
+			gO [meshCounter].GetComponent<MeshCollider> ().sharedMesh = gO [meshCounter].GetComponent<MeshFilter> ().sharedMesh;
 		}
 	}
 
