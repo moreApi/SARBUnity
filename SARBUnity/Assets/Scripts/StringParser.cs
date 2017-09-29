@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using System;
 
 public class StringParser : MonoBehaviour {
 
@@ -36,18 +37,31 @@ public class StringParser : MonoBehaviour {
 	}
 	List<string[]> parse2()
 	{
+        Debug.Log("starting parsing");
 		string[] test = toParse.Split (' ');
+        Debug.Log("map string: " + toParse.Substring(500 * 240, 240));
+        Debug.Log("line 300: " + test[300]);
 		List<string[]> test2List = new List<string[]> ();
 		string[] tempStrArray;
-		for (int i = 0; i < 640; i++)
-		{
-			tempStrArray = new string[480];
-			for (int j = 0; j < 480; j++)
-			{
-				tempStrArray [j] = test [(i * 480) + j];
-			}
-			test2List.Add (tempStrArray);
-		}
-		return test2List;
+        int i = 0;
+        int j = 0;
+        try
+        {
+            for (; i < 640; i++)
+            {
+                tempStrArray = new string[480];
+                for (; j < 480; j++)
+                {
+                    //Debug.Log("i: " + i + " j: " + j);
+                    tempStrArray[j] = test[(i * 480) + j];
+                }
+                Debug.Log("Line "+i+": "+tempStrArray[240]);
+                test2List.Add(tempStrArray);
+            }
+        }catch (Exception e){
+            print("got an exception in parsing");
+            print(e);
+        }
+        return test2List;
 	}
 }

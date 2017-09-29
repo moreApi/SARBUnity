@@ -158,12 +158,13 @@ public class NetworkClient : MonoBehaviour
                     // read the heightmap
                     if (packageCommand == 2)
                     {
+                        Debug.Log("Receiving Height Map");
                         readHeightMap(packageSize);
-                        //for (int i = 0; i < storeHeightMap.Count; i++)
+                        Debug.Log("Received Height Map1");
+                        //for (int i = 50*240; i < 150 * 240/*storeHeightMap.Count*/; i++)
                         //{
                         //    Debug.Log("" + (System.Text.Encoding.UTF8.GetString(storeHeightMap[i])));
                         //}
-
                     }
                     packageCommand = 0;
                     packageSize = 0;
@@ -185,7 +186,7 @@ public class NetworkClient : MonoBehaviour
 			//}
 			tempStr += System.Text.Encoding.ASCII.GetString (tempHeightMap [i]);
 		}
-		Debug.Log ("NS " + tempStr.Length);
+		//Debug.Log ("NS " + tempStr.Length);
 		return tempStr;
 	}
 
@@ -254,6 +255,7 @@ public class NetworkClient : MonoBehaviour
             // Reading heightmap
             while (packageSize > 0)
             {
+                //Debug.Log("Packet size:" + packageSize);
                 int readSize = 0;
                 readSize = Math.Min(storageBuffer.Length, packageSize);
 
@@ -262,6 +264,7 @@ public class NetworkClient : MonoBehaviour
 				packageSize -= readSize;
 				Thread.Sleep (1);
             }
+            Debug.Log("done Reading socket");
         }
         return null;
     }

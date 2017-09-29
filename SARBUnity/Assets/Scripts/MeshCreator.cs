@@ -102,7 +102,15 @@ public class MeshCreator : MonoBehaviour {
 			{
 				for (int i = 0; i < 480; i++)
 				{
-					positions [posCounter].z = float.Parse (myStrings [j] [i]) / 10.0f;
+                    string tmp = myStrings[j][i];
+                    tmp = (tmp != null) ? tmp : "0";
+                    try
+                    {
+                        positions[posCounter].z = float.Parse(tmp) / 10.0f;
+                    } catch(Exception e)
+                    {
+                        Debug.Log("string: " + tmp);
+                    }
 					posCounter = (i + (j * 480)) % sizeOfMesh;
 
 					if (posCounter == 0 && j != 0)

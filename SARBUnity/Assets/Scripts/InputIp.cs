@@ -6,6 +6,6 @@ public class InputIp : MonoBehaviour {
 
 	public void onEdit()
 	{
-		NetworkClient.instance.updateHostName(gameObject.transform.FindChild ("Text").GetComponent<Text>().text);
+		NetworkClient.instance.updateHostName(gameObject.transform.Find ("Text").GetComponent<Text>().text);
 	}
 }
