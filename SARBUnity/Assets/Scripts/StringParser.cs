@@ -59,8 +59,8 @@ public class StringParser : MonoBehaviour {
                 test2List.Add(tempStrArray);
             }
         }catch (Exception e){
-            print("got an exception in parsing");
-            print(e);
+            Debug.Log("got an exception in parsing");
+            Debug.Log(e);
         }
         return test2List;
 	}
