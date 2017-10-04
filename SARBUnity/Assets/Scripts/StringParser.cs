@@ -40,17 +40,18 @@ public class StringParser : MonoBehaviour {
         Debug.Log("starting parsing");
 		string[] test = toParse.Split (' ');
         Debug.Log("map string: " + toParse.Substring(500 * 240, 240));
-        Debug.Log("line 300: " + test[300]);
+        Debug.Log("entry 300: " + test[300]);
+        Debug.Log("String length: "+toParse.Length+ " array length: "+test.Length);
 		List<string[]> test2List = new List<string[]> ();
 		string[] tempStrArray;
         int i = 0;
         int j = 0;
         try
         {
-            for (; i < 640; i++)
+            for (i = 0; i < 640; i++)
             {
                 tempStrArray = new string[480];
-                for (; j < 480; j++)
+                for (j = 0; j < 480; j++)
                 {
                     //Debug.Log("i: " + i + " j: " + j);
                     tempStrArray[j] = test[(i * 480) + j];
@@ -58,9 +59,8 @@ public class StringParser : MonoBehaviour {
                 Debug.Log("Line "+i+": "+tempStrArray[240]);
                 test2List.Add(tempStrArray);
             }
-        }catch (Exception e){
+        }catch {
             Debug.Log("got an exception in parsing");
-            Debug.Log(e);
         }
         return test2List;
 	}
