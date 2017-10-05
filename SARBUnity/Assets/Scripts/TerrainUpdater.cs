@@ -9,13 +9,17 @@ public class TerrainUpdater : MonoBehaviour {
 
     public float[,] targetHeightMap;
 
+    public void SetHeight(string toParse)
+    {
+        targetHeightMap = StringParser.parse(toParse);
+    }
+
     void Start()
     {
         terr = Terrain.activeTerrain;
         hmWidth = terr.terrainData.heightmapWidth;
         hmHeight = terr.terrainData.heightmapHeight;
     }
-
 
     void Update()
     {
@@ -24,7 +28,6 @@ public class TerrainUpdater : MonoBehaviour {
 
         /*
         TODO: smooth change between heights
-        // get the heights of the terrain under this game object
         float[,] heights = terr.terrainData.GetHeights(0,0,hmWidth,hmWidth);
         */
 

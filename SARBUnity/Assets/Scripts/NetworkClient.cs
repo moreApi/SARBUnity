@@ -12,8 +12,8 @@ public class NetworkClient : MonoBehaviour
 {
 
     // String and Host name
-    public String hostname;                     // Ip of the host:      Local or Public ip depends.
-    public Int32 port;                          // Port of the host 
+    public String hostname = "Localhost"; // Ip of the host:      Local or Public ip depends.
+    public Int32 port = 9966; // Port of the host 
 
     internal Boolean socketReady = false;
     internal String inputBuffer = "";
@@ -27,9 +27,6 @@ public class NetworkClient : MonoBehaviour
     Thread thread;
     int heightMapStorageSize;
     List<Byte[]> storeHeightMap;
-
-
-
 
 
     void Awake()
@@ -48,14 +45,10 @@ public class NetworkClient : MonoBehaviour
 		storeHeightMap = new List<byte[]>();
     }
 
-
-
     public void updateHostName(string hostname)
     {
         this.hostname = hostname;
     }
-
-
 
     public void updatePort(Int32 port)
     {
@@ -66,8 +59,6 @@ public class NetworkClient : MonoBehaviour
     {
         this.heightMapStorageSize = size;
     }
-
-
 
     public void initTcpClient()
     {
@@ -84,11 +75,8 @@ public class NetworkClient : MonoBehaviour
             this.thread = new Thread(new ThreadStart(receiveSocket));
             this.thread.Start();
             while (!this.thread.IsAlive);
-            Debug.Log("Connected to: " + this.hostname + " Port: " + this.port);
-
-            
+            Debug.Log("Connected to: " + this.hostname + " Port: " + this.port);          
         }
-
         catch (Exception e)
         {
             // Something went wrong
@@ -244,7 +232,7 @@ public class NetworkClient : MonoBehaviour
         return temp;
     }
 
-    private List<Byte[]> readHeightMap(int packageSize)
+    private void readHeightMap(int packageSize)
     {
 		storeHeightMap.Clear ();
         if (packageSize > 0)
@@ -264,8 +252,9 @@ public class NetworkClient : MonoBehaviour
 				Thread.Sleep (1);
             }
             Debug.Log("done Reading socket");
+            //TODO: this line should not be here
+            Terrain.activeTerrain.GetComponent<TerrainUpdater>().SetHeight(getHeightData());
         }
-        return null;
     }
 
 
