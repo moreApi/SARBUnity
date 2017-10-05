@@ -10,13 +10,10 @@ public class StringParser : MonoBehaviour {
 	public string toParse;
 
 	[HideInInspector]
-	public List<string[]> myStrings;
+	public List<float[]> myStrings;
 
 	// Use this for initialization
 	void Start () {
-		TextAsset bindata= Resources.Load("heightmapData") as TextAsset;
-		toParse = bindata.text;
-		myStrings = parse ();
 	}
 
 	public void updateString(string heightData)
@@ -24,44 +21,37 @@ public class StringParser : MonoBehaviour {
 		toParse = heightData;
 		myStrings = parse2 ();
 	}
+	
 
-	List<string[]> parse()
-	{
-		string[] test = toParse.Split ('\n');
-		List<string[]> test2List = new List<string[]> ();
-		for (int i = 0; i < test.Length; i++)
-		{
-			test2List.Add(test [i].Split (' '));
-		}
-		return test2List;
-	}
-	List<string[]> parse2()
+	
+	List<float[]> parse2()
 	{
         Debug.Log("starting parsing");
 		string[] test = toParse.Split (' ');
-        Debug.Log("map string: " + toParse.Substring(500 * 240, 240));
-        Debug.Log("entry 300: " + test[300]);
-        Debug.Log("String length: "+toParse.Length+ " array length: "+test.Length);
-		List<string[]> test2List = new List<string[]> ();
-		string[] tempStrArray;
+        //Debug.Log("map string: " + toParse.Substring(500 * 240, 240));
+        //Debug.Log("entry 300: " + test[300]);
+        //Debug.Log("String length: "+toParse.Length+ " array length: "+test.Length);
+		List<float[]> test2List = new List<float[]> ();
+		float[] tempStrArray;
         int i = 0;
         int j = 0;
         try
         {
             for (i = 0; i < 640; i++)
             {
-                tempStrArray = new string[480];
+                tempStrArray = new float[480];
                 for (j = 0; j < 480; j++)
                 {
                     //Debug.Log("i: " + i + " j: " + j);
-                    tempStrArray[j] = test[(i * 480) + j];
+                    tempStrArray[j] = float.Parse(test[(i * 480) + j]);
                 }
-                Debug.Log("Line "+i+": "+tempStrArray[240]);
+                //Debug.Log("Line "+i+": "+tempStrArray[240]);
                 test2List.Add(tempStrArray);
             }
         }catch {
             Debug.Log("got an exception in parsing");
         }
+        Debug.Log("end parsing");
         return test2List;
 	}
 }

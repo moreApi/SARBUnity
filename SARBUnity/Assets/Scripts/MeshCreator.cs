@@ -38,7 +38,6 @@ public class MeshCreator : MonoBehaviour {
 
 	void Start()
 	{
-		forceUpdate ();
 		StartCoroutine(UpdateMesh ());
 	}
 
@@ -47,53 +46,22 @@ public class MeshCreator : MonoBehaviour {
 		//("MeshCreator" + NetworkClient.instance.getHeightData ());
 		this.GetComponent<StringParser> ().updateString(NetworkClient.instance.getHeightData ());
 	}
-
-	void forceUpdate()
-	{
-		List<string[]> myStrings = this.GetComponent<StringParser> ().myStrings;
-		Vector3[] positions = gO [0].GetComponent<MeshFilter> ().mesh.vertices;
-		//(gO [0].GetComponent<MeshFilter> ().mesh.vertices.Length);
-		int meshCounter = 0;
-		int posCounter = 0;
-		for (int j = 0; j < 640; j++)
-		{
-			for (int i = 0; i < 480; i++)
-			{
-				positions [posCounter].z = float.Parse (myStrings [j] [i]); // / 10.0f;
-				posCounter = (i + (j * 480)) % sizeOfMesh;
-
-				if (posCounter == 0 && j != 0)
-				{
-					gO [meshCounter].GetComponent<MeshFilter> ().mesh.vertices = positions;
-					gO [meshCounter].GetComponent<MeshFilter> ().mesh.RecalculateNormals ();
-					gO [meshCounter].GetComponent<MeshFilter> ().mesh.RecalculateBounds ();
-					gO [meshCounter].GetComponent<MeshCollider> ().sharedMesh = gO [meshCounter].GetComponent<MeshFilter> ().sharedMesh;
-					meshCounter++;
-					positions = gO [meshCounter].GetComponent<MeshFilter> ().mesh.vertices;
-				}
-			}
-		}
-		if (meshCounter == 9)
-		{
-			//Hacky solution to get the last position in the top mesh to not be 0.
-			positions [sizeOfMesh - 1].z = positions [sizeOfMesh - 2].z;
-
-			gO [meshCounter].GetComponent<MeshFilter> ().mesh.vertices = positions;
-			gO [meshCounter].GetComponent<MeshFilter> ().mesh.RecalculateNormals ();
-			gO [meshCounter].GetComponent<MeshFilter> ().mesh.RecalculateBounds ();
-			gO [meshCounter].GetComponent<MeshCollider> ().sharedMesh = gO [meshCounter].GetComponent<MeshFilter> ().sharedMesh;
-		}
-	}
+	
+	
 
 	IEnumerator UpdateMesh()
 	{
-		List<string[]> myStrings;
+		List<float[]> myStrings;
 		Vector3[] positions = gO [0].GetComponent<MeshFilter> ().mesh.vertices;
 		//(gO [0].GetComponent<MeshFilter> ().mesh.vertices.Length);
 		int meshCounter = 0;
 		int posCounter = 0;
+		while (this.GetComponent<StringParser> ().myStrings == null){
+			yield return new WaitForSeconds(1);
+		}
 		while (running)
 		{
+			Debug.Log("update loop start");
 			myStrings = this.GetComponent<StringParser> ().myStrings;
 			meshCounter = 0;
 			posCounter = 0;
@@ -102,15 +70,9 @@ public class MeshCreator : MonoBehaviour {
 			{
 				for (int i = 0; i < 480; i++)
 				{
-                    string tmp = myStrings[j][i];
-                    tmp = (tmp != null) ? tmp : "0";
-                    try
-                    {
-                        positions[posCounter].z = float.Parse(tmp) / 10.0f;
-                    } catch
-                    {
-                        Debug.Log("string: " + tmp);
-                    }
+                    float tmp = myStrings[j][i];
+                    positions[posCounter].z = tmp; // / 10.0f;
+
 					posCounter = (i + (j * 480)) % sizeOfMesh;
 
 					if (posCounter == 0 && j != 0)
@@ -134,6 +96,7 @@ public class MeshCreator : MonoBehaviour {
 				gO [meshCounter].GetComponent<MeshFilter> ().mesh.RecalculateNormals ();
 				gO [meshCounter].GetComponent<MeshFilter> ().mesh.RecalculateBounds ();
 			}
+			Debug.Log("Update loop end");
 		}
 	}
 
