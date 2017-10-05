@@ -246,7 +246,6 @@ public class NetworkClient : MonoBehaviour
 
     private List<Byte[]> readHeightMap(int packageSize)
     {
-        int listIndex = 0;
 		storeHeightMap.Clear ();
         if (packageSize > 0)
         {

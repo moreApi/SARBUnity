@@ -1,0 +1,7 @@
+Build Dummy Server
+Implement offline mode
+
+
+
+Optional:
+	change protocol to tranfer Int instead of Strings
