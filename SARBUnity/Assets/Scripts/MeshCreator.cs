@@ -19,6 +19,8 @@ public class MeshCreator : MonoBehaviour {
 	private Vector3[] vertices;
 	int sizeOfMesh;
 
+    private List<float[]> heightMap;
+
 
 	void Awake ()
 	{
@@ -44,25 +46,24 @@ public class MeshCreator : MonoBehaviour {
 	public void updateHeightData()
 	{
 		//("MeshCreator" + NetworkClient.instance.getHeightData ());
-		this.GetComponent<StringParser> ().updateString(NetworkClient.instance.getHeightData ());
+        heightMap = StringParser.parse(NetworkClient.instance.getHeightData ());
 	}
 	
 	
 
 	IEnumerator UpdateMesh()
 	{
-		List<float[]> myStrings;
+		
 		Vector3[] positions = gO [0].GetComponent<MeshFilter> ().mesh.vertices;
 		//(gO [0].GetComponent<MeshFilter> ().mesh.vertices.Length);
 		int meshCounter = 0;
 		int posCounter = 0;
-		while (this.GetComponent<StringParser> ().myStrings == null){
+		while (heightMap == null){
 			yield return new WaitForSeconds(1);
 		}
 		while (running)
 		{
 			Debug.Log("update loop start");
-			myStrings = this.GetComponent<StringParser> ().myStrings;
 			meshCounter = 0;
 			posCounter = 0;
 			positions = gO [0].GetComponent<MeshFilter> ().mesh.vertices;
@@ -70,7 +71,7 @@ public class MeshCreator : MonoBehaviour {
 			{
 				for (int i = 0; i < 480; i++)
 				{
-                    float tmp = myStrings[j][i];
+                    float tmp = heightMap[j][i];
                     positions[posCounter].z = tmp; // / 10.0f;
 
 					posCounter = (i + (j * 480)) % sizeOfMesh;

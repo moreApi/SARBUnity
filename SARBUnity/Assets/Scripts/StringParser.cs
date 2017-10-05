@@ -4,27 +4,9 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System;
 
-public class StringParser : MonoBehaviour {
+public static class StringParser {
 
-	[HideInInspector]
-	public string toParse;
-
-	[HideInInspector]
-	public List<float[]> myStrings;
-
-	// Use this for initialization
-	void Start () {
-	}
-
-	public void updateString(string heightData)
-	{
-		toParse = heightData;
-		myStrings = parse2 ();
-	}
-	
-
-	
-	List<float[]> parse2()
+	public static List<float[]> parse(string toParse)
 	{
         Debug.Log("starting parsing");
 		string[] test = toParse.Split (' ');
