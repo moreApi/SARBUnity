@@ -1,3 +1,4 @@
+Terrain Updater
 Build Dummy Server
 Implement offline mode
 
@@ -5,3 +6,5 @@ Implement offline mode
 
 Optional:
 	change protocol to tranfer Int instead of Strings
+	
+Done:

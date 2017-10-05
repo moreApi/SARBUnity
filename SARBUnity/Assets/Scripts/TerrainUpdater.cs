@@ -7,13 +7,7 @@ public class TerrainUpdater : MonoBehaviour {
     int hmWidth; // heightmap width 
     int hmHeight; // heightmap height
 
-
-    int posXInTerrain; // position of the game object in terrain width (x axis) 
-    int posYInTerrain; // position of the game object in terrain height (z axis)
-
-    int size = 50;  // the diameter of terrain portion that will raise under the game object 
-    float desiredHeight = 0; // the height we want that portion of terrain to be
-
+    public float[,] targetHeightMap;
 
     void Start()
     {
@@ -25,38 +19,17 @@ public class TerrainUpdater : MonoBehaviour {
 
     void Update()
     {
-        // get the normalized position of this game object relative to the terrain
-        Vector3 tempCoord = (transform.position - terr.gameObject.transform.position);
-        Vector3 coord;
-        coord.x = tempCoord.x / terr.terrainData.size.x;
-        coord.y = tempCoord.y / terr.terrainData.size.y;
-        coord.z = tempCoord.z / terr.terrainData.size.z;
+        if (targetHeightMap == null)
+            return;
 
-        // get the position of the terrain heightmap where this game object is
-        posXInTerrain = (int)(coord.x * hmWidth);
-        posYInTerrain = (int)(coord.z * hmHeight);
-
-        // we set an offset so that all the raising terrain is under this game object
-        int offset = size / 2;
-
+        /*
+        TODO: smooth change between heights
         // get the heights of the terrain under this game object
-        float[,] heights = terr.terrainData.GetHeights(posXInTerrain - offset, posYInTerrain - offset, size, size);
+        float[,] heights = terr.terrainData.GetHeights(0,0,hmWidth,hmWidth);
+        */
 
-        // we set each sample of the terrain in the size to the desired height
-
-        for (int i = 0; i < size; i++){
-            for (int j = 0; j < size; j++){
-                heights[i, j] = desiredHeight;
-            }
-        }
-        if (desiredHeight < 0.05)
-        {
-            //Debug.Log(desiredHeight);
-            // go raising the terrain slowly
-            desiredHeight += Time.deltaTime/100;
-        }
         // set the new height
-        terr.terrainData.SetHeights(posXInTerrain - offset, posYInTerrain - offset, heights);
+        terr.terrainData.SetHeights(0,0,targetHeightMap);
 
     }
 
